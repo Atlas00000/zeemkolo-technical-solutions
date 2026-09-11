@@ -47,19 +47,23 @@
 
 ## Phase O0 — Baseline & governance
 
+**Status: complete (2026-09-11)**
+
 *Make the repo operable and decisions durable.*
 
 | Day / slice | Workstream | Deliverable | Acceptance |
 | :--- | :--- | :--- | :--- |
-| O0.1 | Docs | `AGENTS.md` / CONTRIBUTING: how to run, env matrix, secrets policy | New contributor can boot client+server+db from docs alone |
-| O0.2 | ADRs | Short ADRs: Clerk, Fastify, auto-matric, payment placeholder, Phase 8 pause | Locked decisions recorded under `docs/adr/` |
-| O0.3 | CI | GitHub Action: `pnpm` typecheck + Vitest (phase suites) + lint on PR | PR cannot merge red typecheck/tests |
-| O0.4 | Runbooks | Postgres backup/restore (`pg_dump`), migrate deploy vs migrate dev | Restore drill documented and tested once locally |
-| O0.5 | Env | Stricter client public-env validation at build; server env already Zod-validated | Missing `NEXT_PUBLIC_*` fails build clearly |
+| O0.1 | Docs | `AGENTS.md` / `CONTRIBUTING.md`: how to run, env matrix, secrets policy | New contributor can boot client+server+db from docs alone |
+| O0.2 | ADRs | Short ADRs: Clerk, Fastify, auto-matric, payment placeholder, Phase 8 pause | Locked decisions under `docs/adr/` |
+| O0.3 | CI | GitHub Action: `pnpm` typecheck + Vitest + lint on PR | `.github/workflows/ci.yml` |
+| O0.4 | Runbooks | Postgres backup/restore (`pg_dump`), migrate deploy vs migrate dev | `docs/runbooks/*`; local dump drill logged |
+| O0.5 | Env | Stricter client public-env validation at build | `client/src/env.ts` fails fast if `NEXT_PUBLIC_*` missing |
 
 ---
 
 ## Phase O1 — Admin access & custom admin dashboard
+
+**Status: complete (2026-09-11)**
 
 *Replace “thin admin page” with a routine-ops control panel; bootstrap real staff access.*
 
@@ -72,6 +76,12 @@
 | O1.5 | Orders & inventory | Full stack | Order tracking, stock/publish edits | Stock edit reflected on store catalog |
 | O1.6 | Moderation hooks | Full stack | Forum lock/hide entry points (use existing `isLocked`) | Admin can lock a thread from dashboard |
 | O1.7 | Audit log | Backend | Persist admin actor + action + target + timestamp | Last N admin actions visible in dashboard |
+
+**Shipped:**
+- `docs/runbooks/admin-bootstrap.md` + `server/scripts/promote-admin.ts`
+- `AdminAuditLog` model + migration; mutations write audit rows
+- Admin APIs: overview, audit, matric filter/revoke, forum lock, richer consultations
+- Custom `/admin` shell with section nav (overview → audit)
 
 **Routine admin activities (minimum viable dashboard):**
 
@@ -289,6 +299,7 @@ O4 should start as soon as O0 completes (does not need to wait for all content).
 | Doc | Topic |
 | :--- | :--- |
 | `roadmap.md` | Master engineering roadmap (Phases 0–8) |
+| `docs/runbooks/admin-bootstrap.md` | Promote Clerk user → ADMIN + MFA checklist |
 | `docs/dev-notes/payments-provider-pending.md` | Payment placeholder policy |
 | `docs/dev-notes/qr-redirect-inventory.md` | QR 301 map placeholders |
 | `docs/dev-notes/security-hardening.md` | Rate limits & headers checklist |

@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck-lint:
+    name: Typecheck & lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Server typecheck (lint)
+        run: pnpm --filter @zeemkolo/server lint
+        env:
+          # Prisma/env modules may load at import; provide harmless placeholders
+          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          DATABASE_URL: postgresql://zeemkolo_admin:zeemkolo_secret_password@localhost:5432/zeemkolo_db?schema=public
+          REDIS_URL: redis://localhost:6379
+      - name: Client typecheck
+        run: pnpm --filter @zeemkolo/client exec tsc -p tsconfig.json --noEmit
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+
+  test:
+    name: Vitest (server modules)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: zeemkolo_admin
+          POSTGRES_PASSWORD: zeemkolo_secret_password
+          POSTGRES_DB: zeemkolo_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U zeemkolo_admin -d zeemkolo_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://zeemkolo_admin:zeemkolo_secret_password@localhost:5432/zeemkolo_db?schema=public
+      REDIS_URL: redis://localhost:6379
+      CLERK_SECRET_KEY: sk_test_ci_placeholder
+      CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+      NODE_ENV: test
+      DOWNLOAD_TOKEN_SECRET: ci-download-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prisma migrate + seed
+        working-directory: server
+        run: |
+          pnpm exec prisma generate
+          pnpm exec prisma migrate deploy
+          pnpm exec prisma db seed
+      - name: Run server Vitest suites
+        working-directory: server
+        run: pnpm exec vitest run src/modules

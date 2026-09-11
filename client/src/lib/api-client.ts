@@ -398,6 +398,33 @@ export function requestStoreDownload(
   }>(`/store/orders/${orderId}/downloads/${productId}${q}`, { token });
 }
 
+export function adminGetOverview(token: string) {
+  return apiFetch<{
+    overview: {
+      users: number;
+      openConsultations: number;
+      pendingOrders: number;
+      unclaimedMatrics: number;
+      claimedMatrics: number;
+      lockedThreads: number;
+    };
+  }>("/admin/overview", { token });
+}
+
+export function adminListAudit(token: string, limit = 50) {
+  return apiFetch<{
+    events: {
+      id: string;
+      action: string;
+      targetType: string;
+      targetId: string | null;
+      metadata: unknown;
+      createdAt: string;
+      actor: { id: string; email: string; fullName: string };
+    }[];
+  }>(`/admin/audit?limit=${limit}`, { token });
+}
+
 export function adminBatchMatrics(
   input: { count: number; year?: number },
   token: string,
@@ -414,18 +441,38 @@ export function adminBatchMatrics(
   });
 }
 
-export function adminListMatrics(token: string) {
+export function adminListMatrics(
+  token: string,
+  opts?: { filter?: "all" | "claimed" | "unclaimed"; limit?: number },
+) {
+  const params = new URLSearchParams();
+  if (opts?.filter) params.set("filter", opts.filter);
+  if (opts?.limit) params.set("limit", String(opts.limit));
+  const q = params.toString();
   return apiFetch<{
     matrics: {
       id: string;
       code: string;
       claimedAt: string | null;
+      claimed: boolean;
       user: { id: string; email: string; fullName: string } | null;
     }[];
-  }>("/admin/matrics", { token });
+  }>(`/admin/matrics${q ? `?${q}` : ""}`, { token });
 }
 
-export function adminListConsultations(token: string) {
+export function adminRevokeMatric(id: string, token: string) {
+  return apiFetch<{
+    id: string;
+    code: string;
+    mode: "deleted" | "released";
+  }>(`/admin/matrics/${id}/revoke`, {
+    method: "POST",
+    token,
+  });
+}
+
+export function adminListConsultations(token: string, status?: string) {
+  const q = status ? `?status=${encodeURIComponent(status)}` : "";
   return apiFetch<{
     consultations: {
       id: string;
@@ -433,12 +480,13 @@ export function adminListConsultations(token: string) {
       guestEmail: string;
       serviceType: string;
       projectBrief: string;
+      attachmentKey: string | null;
       slotStartsAt: string;
       timezone: string;
       status: string;
       createdAt: string;
     }[];
-  }>("/admin/consultations", { token });
+  }>(`/admin/consultations${q}`, { token });
 }
 
 export function adminUpdateConsultationStatus(
@@ -456,7 +504,8 @@ export function adminUpdateConsultationStatus(
   );
 }
 
-export function adminListOrders(token: string) {
+export function adminListOrders(token: string, status?: string) {
+  const q = status ? `?status=${encodeURIComponent(status)}` : "";
   return apiFetch<{
     orders: {
       id: string;
@@ -464,14 +513,16 @@ export function adminListOrders(token: string) {
       status: string;
       currency: string;
       totalAmount: number;
+      paymentProvider: string | null;
       paymentRef: string | null;
       createdAt: string;
       items: {
         quantity: number;
+        unitPrice: number;
         product: { title: string; slug: string };
       }[];
     }[];
-  }>("/admin/orders", { token });
+  }>(`/admin/orders${q}`, { token });
 }
 
 export function adminListProducts(token: string) {
@@ -505,6 +556,36 @@ export function adminUpdateProduct(
       method: "PATCH",
       token,
       body: JSON.stringify(input),
+    },
+  );
+}
+
+export function adminListForumThreads(token: string) {
+  return apiFetch<{
+    threads: {
+      id: string;
+      title: string;
+      isLocked: boolean;
+      isPinned: boolean;
+      replyCount: number;
+      createdAt: string;
+      author: { id: string; fullName: string; email: string };
+      category: { slug: string; title: string };
+    }[];
+  }>("/admin/forum/threads", { token });
+}
+
+export function adminSetForumThreadLocked(
+  id: string,
+  locked: boolean,
+  token: string,
+) {
+  return apiFetch<{ id: string; title: string; isLocked: boolean }>(
+    `/admin/forum/threads/${id}/lock`,
+    {
+      method: "PATCH",
+      token,
+      body: JSON.stringify({ locked }),
     },
   );
 }

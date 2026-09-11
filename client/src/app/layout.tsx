@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { clientEnv } from "@/env";
 import "./globals.css";
+
+// Touch validated public env so misconfiguration fails at boot/build.
+void clientEnv.NEXT_PUBLIC_API_URL;
 
 const display = Fraunces({
   subsets: ["latin"],

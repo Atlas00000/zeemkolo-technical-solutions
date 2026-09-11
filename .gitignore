@@ -42,3 +42,6 @@ redis_data/
 
 # Uploads (local disk fallback)
 server/uploads/
+
+# Local DB dumps (see docs/runbooks/postgres-backup-restore.md)
+backups/

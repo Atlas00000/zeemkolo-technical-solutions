@@ -24,6 +24,16 @@ describe("admin routes + hardening (Phase 7)", () => {
     expect([401, 403, 404]).toContain(res.statusCode);
   });
 
+  it("GET /admin/overview rejects unauthenticated", async () => {
+    const res = await app.inject({ method: "GET", url: "/admin/overview" });
+    expect([401, 403, 404]).toContain(res.statusCode);
+  });
+
+  it("GET /admin/forum/threads rejects unauthenticated", async () => {
+    const res = await app.inject({ method: "GET", url: "/admin/forum/threads" });
+    expect([401, 403, 404]).toContain(res.statusCode);
+  });
+
   it("POST /admin/matrics/batch rejects unauthenticated", async () => {
     const res = await app.inject({
       method: "POST",

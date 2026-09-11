@@ -1,15 +1,23 @@
-import { ConsultationStatus } from "@prisma/client";
+import { ConsultationStatus, Role } from "@prisma/client";
 import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "../../config/db.js";
 import {
   batchGenerateMatrics,
+  getAdminOverview,
   listConsultations,
+  listForumThreadsAdmin,
+  listMatrics,
+  revokeMatric,
+  setForumThreadLocked,
   updateConsultationStatus,
   updateProduct,
+  writeAuditLog,
+  listAuditLogs,
 } from "./admin.service.js";
 
-describe("admin.service (Phase 7)", () => {
+describe("admin.service (O1)", () => {
   const generatedCodes: string[] = [];
+  let auditActorId: string | null = null;
 
   afterAll(async () => {
     if (generatedCodes.length) {
@@ -17,7 +25,18 @@ describe("admin.service (Phase 7)", () => {
         where: { code: { in: generatedCodes } },
       });
     }
+    if (auditActorId) {
+      await prisma.adminAuditLog.deleteMany({ where: { actorId: auditActorId } });
+    }
     await prisma.$disconnect();
+  });
+
+  it("returns overview counts", async () => {
+    const overview = await getAdminOverview();
+    expect(overview.users).toBeGreaterThanOrEqual(0);
+    expect(overview.unclaimedMatrics).toBeGreaterThanOrEqual(0);
+    expect(typeof overview.openConsultations).toBe("number");
+    expect(typeof overview.pendingOrders).toBe("number");
   });
 
   it("batch-generates unclaimed matric codes and CSV", async () => {
@@ -29,13 +48,25 @@ describe("admin.service (Phase 7)", () => {
     generatedCodes.push(...result.codes);
   });
 
-  it("updates consultation status", async () => {
+  it("filters matrics and revokes an unclaimed code", async () => {
+    const listed = await listMatrics({ filter: "unclaimed", limit: 500 });
+    expect(listed.some((m) => generatedCodes.includes(m.code))).toBe(true);
+
+    const target = listed.find((m) => generatedCodes.includes(m.code));
+    expect(target).toBeTruthy();
+    const revoked = await revokeMatric(target!.id);
+    expect(revoked.mode).toBe("deleted");
+    generatedCodes.splice(generatedCodes.indexOf(target!.code), 1);
+  });
+
+  it("updates consultation status and includes attachmentKey in list", async () => {
     const consultation = await prisma.consultation.create({
       data: {
-        guestName: "Phase 7 Admin Test",
-        guestEmail: "phase7-admin@example.com",
+        guestName: "O1 Admin Test",
+        guestEmail: "o1-admin@example.com",
         serviceType: "Firmware Review",
-        projectBrief: "Admin panel status update regression test brief.",
+        projectBrief: "O1 admin panel status update regression test brief.",
+        attachmentKey: "consultations/o1-test.pdf",
         slotStartsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         timezone: "Africa/Lagos",
         status: ConsultationStatus.PENDING,
@@ -49,7 +80,8 @@ describe("admin.service (Phase 7)", () => {
     expect(updated.status).toBe("CONFIRMED");
 
     const listed = await listConsultations({ status: ConsultationStatus.CONFIRMED });
-    expect(listed.some((c) => c.id === consultation.id)).toBe(true);
+    const row = listed.find((c) => c.id === consultation.id);
+    expect(row?.attachmentKey).toBe("consultations/o1-test.pdf");
 
     await prisma.consultation.delete({ where: { id: consultation.id } });
   });
@@ -66,5 +98,43 @@ describe("admin.service (Phase 7)", () => {
     });
     expect(updated.stock).toBe(next);
     await updateProduct({ productId: product.id, stock: original });
+  });
+
+  it("locks and unlocks a forum thread when one exists", async () => {
+    const threads = await listForumThreadsAdmin(5);
+    if (threads.length === 0) {
+      expect(threads).toEqual([]);
+      return;
+    }
+    const thread = threads[0]!;
+    const locked = await setForumThreadLocked({
+      threadId: thread.id,
+      locked: true,
+    });
+    expect(locked.isLocked).toBe(true);
+    const unlocked = await setForumThreadLocked({
+      threadId: thread.id,
+      locked: false,
+    });
+    expect(unlocked.isLocked).toBe(false);
+  });
+
+  it("writes and lists audit log entries", async () => {
+    const admin = await prisma.user.findFirst({
+      where: { role: Role.ADMIN },
+    });
+    expect(admin).toBeTruthy();
+    auditActorId = admin!.id;
+
+    await writeAuditLog({
+      actorId: admin!.id,
+      action: "test.o1_audit",
+      targetType: "system",
+      targetId: null,
+      metadata: { phase: "O1" },
+    });
+
+    const events = await listAuditLogs(20);
+    expect(events.some((e) => e.action === "test.o1_audit")).toBe(true);
   });
 });

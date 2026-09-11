@@ -33,6 +33,14 @@ async function main() {
   );
 
   checks.push(
+    await check("Admin overview rejects anonymous", async () => {
+      const res = await fetch(`${API}/admin/overview`);
+      const ok = res.status === 401 || res.status === 403;
+      return { ok, detail: `status=${res.status}` };
+    }),
+  );
+
+  checks.push(
     await check("Admin API rejects anonymous", async () => {
       const res = await fetch(`${API}/admin/matrics`);
       const ok = res.status === 401 || res.status === 403;

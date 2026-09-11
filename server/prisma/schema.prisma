@@ -33,6 +33,7 @@ model User {
   forumVotes    ForumVote[]
   orders        Order[]
   newsletter    NewsletterSubscription?
+  adminAudits   AdminAuditLog[]
 
   @@map("users")
 }
@@ -296,4 +297,21 @@ model OrderItem {
   unitPrice Int     @map("unit_price")
 
   @@map("order_items")
+}
+
+// ─── Admin audit ───────────────────────────────────────────────────────────
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  actorId    String   @map("actor_id")
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  action     String
+  targetType String   @map("target_type")
+  targetId   String?  @map("target_id")
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@map("admin_audit_logs")
 }

@@ -1,4 +1,4 @@
-import { ConsultationStatus, OrderStatus, type Prisma } from "@prisma/client";
+import { ConsultationStatus, OrderStatus, Role, type Prisma } from "@prisma/client";
 import { prisma } from "../../config/db.js";
 
 export class AdminError extends Error {
@@ -9,6 +9,73 @@ export class AdminError extends Error {
     super(message);
     this.name = "AdminError";
   }
+}
+
+export async function writeAuditLog(input: {
+  actorId: string;
+  action: string;
+  targetType: string;
+  targetId?: string | null;
+  metadata?: Prisma.InputJsonValue;
+}) {
+  return prisma.adminAuditLog.create({
+    data: {
+      actorId: input.actorId,
+      action: input.action,
+      targetType: input.targetType,
+      targetId: input.targetId ?? null,
+      metadata: input.metadata ?? undefined,
+    },
+  });
+}
+
+export async function listAuditLogs(limit = 50) {
+  const rows = await prisma.adminAuditLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: Math.min(limit, 200),
+    include: {
+      actor: { select: { id: true, email: true, fullName: true } },
+    },
+  });
+
+  return rows.map((r) => ({
+    id: r.id,
+    action: r.action,
+    targetType: r.targetType,
+    targetId: r.targetId,
+    metadata: r.metadata,
+    createdAt: r.createdAt.toISOString(),
+    actor: r.actor,
+  }));
+}
+
+export async function getAdminOverview() {
+  const [
+    userCount,
+    openConsultations,
+    pendingOrders,
+    unclaimedMatrics,
+    claimedMatrics,
+    lockedThreads,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.consultation.count({
+      where: { status: { in: [ConsultationStatus.PENDING, ConsultationStatus.CONFIRMED] } },
+    }),
+    prisma.order.count({ where: { status: OrderStatus.PENDING } }),
+    prisma.matric.count({ where: { userId: null } }),
+    prisma.matric.count({ where: { userId: { not: null } } }),
+    prisma.forumThread.count({ where: { isLocked: true } }),
+  ]);
+
+  return {
+    users: userCount,
+    openConsultations,
+    pendingOrders,
+    unclaimedMatrics,
+    claimedMatrics,
+    lockedThreads,
+  };
 }
 
 async function nextMatricSequence(
@@ -62,10 +129,23 @@ export async function batchGenerateMatrics(input: {
   };
 }
 
-export async function listMatrics(limit = 100) {
+export async function listMatrics(input?: {
+  limit?: number;
+  filter?: "all" | "claimed" | "unclaimed";
+}) {
+  const limit = Math.min(input?.limit ?? 100, 500);
+  const filter = input?.filter ?? "all";
+  const where =
+    filter === "claimed"
+      ? { userId: { not: null } }
+      : filter === "unclaimed"
+        ? { userId: null }
+        : undefined;
+
   const matrics = await prisma.matric.findMany({
+    where,
     orderBy: { code: "asc" },
-    take: Math.min(limit, 500),
+    take: limit,
     include: {
       user: { select: { id: true, email: true, fullName: true } },
     },
@@ -75,8 +155,43 @@ export async function listMatrics(limit = 100) {
     id: m.id,
     code: m.code,
     claimedAt: m.claimedAt?.toISOString() ?? null,
+    claimed: Boolean(m.userId),
     user: m.user,
   }));
+}
+
+/** Delete an unused matric, or release a claimed one (demote student). */
+export async function revokeMatric(matricId: string) {
+  const matric = await prisma.matric.findUnique({
+    where: { id: matricId },
+    include: { user: true },
+  });
+  if (!matric) throw new AdminError("Matric not found", 404);
+
+  if (!matric.userId) {
+    await prisma.matric.delete({ where: { id: matricId } });
+    return { id: matricId, code: matric.code, mode: "deleted" as const };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.matric.update({
+      where: { id: matricId },
+      data: { userId: null, claimedAt: null },
+    });
+    if (matric.user && matric.user.role === Role.ZEEMBLE_STUDENT) {
+      await tx.user.update({
+        where: { id: matric.userId! },
+        data: { role: Role.GENERAL_CUSTOMER },
+      });
+    }
+  });
+
+  return {
+    id: matricId,
+    code: matric.code,
+    mode: "released" as const,
+    previousUserId: matric.userId,
+  };
 }
 
 export async function listConsultations(input?: { status?: ConsultationStatus }) {
@@ -92,6 +207,7 @@ export async function listConsultations(input?: { status?: ConsultationStatus })
     guestEmail: c.guestEmail,
     serviceType: c.serviceType,
     projectBrief: c.projectBrief,
+    attachmentKey: c.attachmentKey,
     slotStartsAt: c.slotStartsAt.toISOString(),
     timezone: c.timezone,
     status: c.status,
@@ -199,4 +315,82 @@ export async function listProductsAdmin() {
     priceNgn: p.priceNgn,
     priceUsd: p.priceUsd,
   }));
+}
+
+export async function listForumThreadsAdmin(limit = 50) {
+  const threads = await prisma.forumThread.findMany({
+    orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
+    take: Math.min(limit, 100),
+    include: {
+      author: { select: { id: true, fullName: true, email: true } },
+      category: { select: { slug: true, title: true } },
+      _count: { select: { replies: true } },
+    },
+  });
+
+  return threads.map((t) => ({
+    id: t.id,
+    title: t.title,
+    isLocked: t.isLocked,
+    isPinned: t.isPinned,
+    replyCount: t._count.replies,
+    createdAt: t.createdAt.toISOString(),
+    author: t.author,
+    category: t.category,
+  }));
+}
+
+export async function setForumThreadLocked(input: {
+  threadId: string;
+  locked: boolean;
+}) {
+  const existing = await prisma.forumThread.findUnique({
+    where: { id: input.threadId },
+  });
+  if (!existing) throw new AdminError("Thread not found", 404);
+
+  const updated = await prisma.forumThread.update({
+    where: { id: input.threadId },
+    data: { isLocked: input.locked },
+  });
+
+  return {
+    id: updated.id,
+    title: updated.title,
+    isLocked: updated.isLocked,
+  };
+}
+
+export async function promoteUserToAdmin(input: {
+  email?: string;
+  clerkUserId?: string;
+}) {
+  if (!input.email && !input.clerkUserId) {
+    throw new AdminError("email or clerkUserId required", 400);
+  }
+
+  const user = await prisma.user.findFirst({
+    where: input.clerkUserId
+      ? { clerkUserId: input.clerkUserId }
+      : { email: input.email!.toLowerCase() },
+  });
+
+  if (!user) {
+    throw new AdminError(
+      "User not found — they must sign in once so Postgres syncs from Clerk",
+      404,
+    );
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: { role: Role.ADMIN },
+  });
+
+  return {
+    id: updated.id,
+    email: updated.email,
+    clerkUserId: updated.clerkUserId,
+    role: updated.role,
+  };
 }
