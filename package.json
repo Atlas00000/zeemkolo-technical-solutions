@@ -13,7 +13,13 @@
     "db:up": "docker-compose up -d postgres redis",
     "db:down": "docker-compose stop postgres redis",
     "db:logs": "docker-compose logs -f postgres redis",
-    "test:phase1": "pnpm --filter @zeemkolo/server test:phase1"
+    "test:phase1": "pnpm --filter @zeemkolo/server test:phase1",
+    "test:phase2": "pnpm --filter @zeemkolo/server test:phase2",
+    "test:phase3": "pnpm --filter @zeemkolo/server test:phase3",
+    "test:phase4": "pnpm --filter @zeemkolo/server test:phase4",
+    "test:phase5": "pnpm --filter @zeemkolo/server test:phase5",
+    "test:phase6": "pnpm --filter @zeemkolo/server test:phase6",
+    "test:phase7": "pnpm --filter @zeemkolo/server test:phase7"
   },
   "engines": {
     "node": ">=20"

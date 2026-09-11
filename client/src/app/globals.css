@@ -3,10 +3,73 @@
 @tailwind utilities;
 
 :root {
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
 }
 
 body {
   margin: 0;
+}
+
+@keyframes marketing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes marketing-pan {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.06) translate3d(-1.5%, 1%, 0);
+  }
+}
+
+@keyframes marketing-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    opacity: 0.75;
+    transform: translate3d(-12px, 8px, 0);
+  }
+}
+
+.marketing-fade-up {
+  animation: marketing-fade-up 700ms ease-out both;
+}
+
+.marketing-fade-up-delay {
+  animation: marketing-fade-up 700ms ease-out 120ms both;
+}
+
+.marketing-fade-up-delay-2 {
+  animation: marketing-fade-up 700ms ease-out 240ms both;
+}
+
+.marketing-hero-pan img {
+  animation: marketing-pan 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.marketing-glow {
+  animation: marketing-glow 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-fade-up,
+  .marketing-fade-up-delay,
+  .marketing-fade-up-delay-2,
+  .marketing-hero-pan img,
+  .marketing-glow {
+    animation: none;
+  }
 }

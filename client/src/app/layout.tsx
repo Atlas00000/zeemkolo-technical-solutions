@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Fraunces, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
+
+const display = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const sans = Source_Sans_3({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Zeemkolo Technical Solutions",
@@ -15,8 +28,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className="min-h-screen bg-brand-mist text-brand-ink antialiased">
+      <html lang="en" className={`${display.variable} ${sans.variable}`}>
+        <body className="min-h-screen bg-brand-mist font-sans text-brand-ink antialiased">
           {children}
         </body>
       </html>

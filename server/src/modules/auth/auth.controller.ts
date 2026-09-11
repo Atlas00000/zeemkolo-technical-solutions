@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../../config/db.js";
 import { requireAuth } from "../../middleware/clerk-auth.middleware.js";
+import { rateLimitMatricClaim } from "../../middleware/rate-limiter.js";
 import { claimMatric, MatricClaimError } from "./matric.service.js";
 import { handleClerkWebhook } from "./clerk-webhook.js";
 
@@ -34,7 +35,7 @@ export async function authRoutes(app: FastifyInstance) {
 
   app.post(
     "/auth/matric/claim",
-    { preHandler: [requireAuth] },
+    { preHandler: [requireAuth, rateLimitMatricClaim] },
     async (request, reply) => {
       const parsed = claimBodySchema.safeParse(request.body);
       if (!parsed.success) {

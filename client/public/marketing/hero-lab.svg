@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f1720"/>
+      <stop offset="55%" stop-color="#1e2a36"/>
+      <stop offset="100%" stop-color="#243447"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e8eef2" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <!-- PCB outline -->
+  <rect x="720" y="180" width="720" height="520" rx="8" fill="#162029" stroke="#c45c26" stroke-opacity="0.35" stroke-width="2"/>
+  <path d="M760 260 H1180 M760 320 H1100 M760 380 H1240 M760 440 H1050 M760 500 H1200 M760 560 H1120"
+        stroke="#e8eef2" stroke-opacity="0.2" stroke-width="2"/>
+  <circle cx="820" cy="260" r="10" fill="#c45c26"/>
+  <circle cx="980" cy="320" r="10" fill="#e8eef2" fill-opacity="0.5"/>
+  <circle cx="1140" cy="380" r="10" fill="#c45c26" fill-opacity="0.8"/>
+  <rect x="860" y="470" width="160" height="70" rx="4" fill="#0f1720" stroke="#e8eef2" stroke-opacity="0.35"/>
+  <text x="900" y="512" fill="#e8eef2" fill-opacity="0.7" font-family="monospace" font-size="18">MCU</text>
+  <path d="M1020 505 H1280 V360" stroke="#c45c26" stroke-width="2" stroke-opacity="0.7"/>
+  <circle cx="1280" cy="360" r="18" stroke="#c45c26" stroke-width="3" fill="none"/>
+  <!-- Oscilloscope-ish left -->
+  <rect x="120" y="240" width="420" height="280" rx="6" fill="#101820" stroke="#e8eef2" stroke-opacity="0.2"/>
+  <path d="M160 380 C220 300, 280 460, 340 360 S460 300, 500 380" stroke="#c45c26" stroke-width="3" fill="none"/>
+  <text x="140" y="220" fill="#e8eef2" fill-opacity="0.45" font-family="Georgia, serif" font-size="22">Lab bench · firmware · hardware</text>
+</svg>

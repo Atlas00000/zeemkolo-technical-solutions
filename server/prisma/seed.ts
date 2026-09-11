@@ -54,6 +54,7 @@ async function main() {
                   title: "Welcome to Zeemble",
                   isPreview: true,
                   sortOrder: 1,
+                  schematicKey: "/schematics/sample-circuit.svg",
                   markdownBody: `# Welcome to Zeemble
 
 This preview lesson introduces the Zeemble Program.
@@ -61,9 +62,32 @@ This preview lesson introduces the Zeemble Program.
 ## Goals
 - Understand the course structure
 - Set up your lab bench
-- Claim your matric number at registration
+- Know how your matric identifies you in the academy
+
+## Ohm's law
 
 $$V = IR$$
+
+## Blink sketch
+
+\`\`\`c
+#include <stdint.h>
+
+#define LED_PIN 13
+
+void setup(void) {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop(void) {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}
+\`\`\`
+
+Use the schematic viewer below to pan and zoom the sample circuit.
 `,
                 },
                 {
@@ -74,6 +98,21 @@ $$V = IR$$
                   markdownBody: `# Lab Safety and Tools
 
 Full lesson content for verified Zeemble students only.
+
+## Bench rules
+1. Power off before rewiring
+2. Use current-limited supplies when probing
+3. Keep ESD strap connected on CMOS work
+
+## Multimeter checklist
+- Continuity before power
+- Voltage range before probing rails
+- Current mode only in series
+
+\`\`\`bash
+# Example serial monitor baud
+pio device monitor -b 115200
+\`\`\`
 `,
                 },
               ],
@@ -84,7 +123,80 @@ Full lesson content for verified Zeemble students only.
     },
   });
 
-  await prisma.forumCategory.upsert({
+  // Keep lesson bodies fresh on re-seed (upsert create only runs once)
+  const welcomeMarkdown = `# Welcome to Zeemble
+
+This preview lesson introduces the Zeemble Program.
+
+## Goals
+- Understand the course structure
+- Set up your lab bench
+- Know how your matric identifies you in the academy
+
+## Ohm's law
+
+$$V = IR$$
+
+## Blink sketch
+
+\`\`\`c
+#include <stdint.h>
+
+#define LED_PIN 13
+
+void setup(void) {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop(void) {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}
+\`\`\`
+
+Use the schematic viewer below to pan and zoom the sample circuit.
+`;
+
+  const labMarkdown = `# Lab Safety and Tools
+
+Full lesson content for verified Zeemble students only.
+
+## Bench rules
+1. Power off before rewiring
+2. Use current-limited supplies when probing
+3. Keep ESD strap connected on CMOS work
+
+## Multimeter checklist
+- Continuity before power
+- Voltage range before probing rails
+- Current mode only in series
+
+\`\`\`bash
+# Example serial monitor baud
+pio device monitor -b 115200
+\`\`\`
+`;
+
+  await prisma.lesson.updateMany({
+    where: { slug: "welcome-to-zeemble" },
+    data: {
+      isPreview: true,
+      schematicKey: "/schematics/sample-circuit.svg",
+      markdownBody: welcomeMarkdown,
+    },
+  });
+
+  await prisma.lesson.updateMany({
+    where: { slug: "lab-safety-and-tools" },
+    data: {
+      isPreview: false,
+      markdownBody: labMarkdown,
+    },
+  });
+
+  const generalCategory = await prisma.forumCategory.upsert({
     where: { slug: "general" },
     update: {},
     create: {
@@ -94,6 +206,29 @@ Full lesson content for verified Zeemble students only.
       sortOrder: 1,
     },
   });
+
+  const existingSeedThread = await prisma.forumThread.findFirst({
+    where: {
+      categoryId: generalCategory.id,
+      title: "Welcome to the Zeemble forum",
+    },
+  });
+
+  if (!existingSeedThread) {
+    await prisma.forumThread.create({
+      data: {
+        categoryId: generalCategory.id,
+        authorId: admin.id,
+        title: "Welcome to the Zeemble forum",
+        body: `This board is for Zeemble students to discuss labs, firmware, and hardware questions.
+
+Guests can read discussions. Students can start threads, reply, and upvote helpful posts.
+
+Tip: include your MCU part number and what you already tried when asking for help.`,
+        isPinned: true,
+      },
+    });
+  }
 
   await prisma.product.upsert({
     where: { slug: "starter-lab-kit" },
