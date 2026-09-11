@@ -1,0 +1,21 @@
+{
+  "name": "zeemkolo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Zeemkolo Technical Solutions — decoupled monorepo (client + server)",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:client": "pnpm --filter @zeemkolo/client dev",
+    "dev:server": "pnpm --filter @zeemkolo/server dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "db:up": "docker-compose up -d postgres redis",
+    "db:down": "docker-compose stop postgres redis",
+    "db:logs": "docker-compose logs -f postgres redis",
+    "test:phase1": "pnpm --filter @zeemkolo/server test:phase1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

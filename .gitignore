@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Env & secrets
+.env
+.env.local
+.env.*.local
+client/.env.local
+server/.env
+!.env.example
+
+# Builds
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Prisma
+server/prisma/*.db
+server/prisma/*.db-journal
+
+# Logs & caches
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.turbo/
+.cache/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Docker volumes (if ever bind-mounted here)
+postgres_data/
+redis_data/
+
+# Uploads (local disk fallback)
+server/uploads/

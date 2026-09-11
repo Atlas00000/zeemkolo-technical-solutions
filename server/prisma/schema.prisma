@@ -1,0 +1,299 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Identity & Access ─────────────────────────────────────────────────────
+
+enum Role {
+  PUBLIC_VISITOR
+  GENERAL_CUSTOMER
+  ZEEMBLE_STUDENT
+  ADMIN
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique @map("clerk_user_id")
+  email       String   @unique
+  fullName    String   @map("full_name")
+  role        Role     @default(GENERAL_CUSTOMER)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  matric        Matric?
+  consultations Consultation[]
+  progress      LessonProgress[]
+  forumThreads  ForumThread[]            @relation("ThreadAuthor")
+  forumReplies  ForumReply[]             @relation("ReplyAuthor")
+  forumVotes    ForumVote[]
+  orders        Order[]
+  newsletter    NewsletterSubscription?
+
+  @@map("users")
+}
+
+model Matric {
+  id          String    @id @default(cuid())
+  code        String    @unique // e.g. ZMB-2026-001
+  claimedAt   DateTime? @map("claimed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  userId      String?   @unique @map("user_id")
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([code])
+  @@map("matrics")
+}
+
+model NewsletterSubscription {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  userId    String?  @unique @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletter_subscriptions")
+}
+
+// ─── Consultations ─────────────────────────────────────────────────────────
+
+enum ConsultationStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Consultation {
+  id              String              @id @default(cuid())
+  userId          String?             @map("user_id")
+  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestName       String              @map("guest_name")
+  guestEmail      String              @map("guest_email")
+  serviceType     String              @map("service_type")
+  projectBrief    String              @map("project_brief") @db.Text
+  attachmentKey   String?             @map("attachment_key") // R2 object key
+  slotStartsAt    DateTime            @map("slot_starts_at")
+  timezone        String              @default("Africa/Lagos")
+  status          ConsultationStatus  @default(PENDING)
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  @@index([slotStartsAt])
+  @@index([status])
+  @@map("consultations")
+}
+
+// ─── Zeemble LMS ───────────────────────────────────────────────────────────
+
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String   @db.Text
+  isPublished Boolean  @default(false) @map("is_published")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  modules Module[]
+
+  @@map("courses")
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  courseId    String   @map("course_id")
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  slug        String
+  title       String
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  lessons Lesson[]
+
+  @@unique([courseId, slug])
+  @@map("modules")
+}
+
+model Lesson {
+  id            String   @id @default(cuid())
+  moduleId      String   @map("module_id")
+  module        Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  slug          String
+  title         String
+  markdownBody  String   @map("markdown_body") @db.Text
+  videoUrl      String?  @map("video_url")
+  schematicKey  String?  @map("schematic_key") // R2 / public path
+  codeBundleKey String?  @map("code_bundle_key")
+  isPreview     Boolean  @default(false) @map("is_preview") // Module 1 / public preview
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  progress LessonProgress[]
+
+  @@unique([moduleId, slug])
+  @@map("lessons")
+}
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String   @map("lesson_id")
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completed   Boolean  @default(false)
+  completedAt DateTime? @map("completed_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+// ─── Forum ─────────────────────────────────────────────────────────────────
+
+model ForumCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  threads ForumThread[]
+
+  @@map("forum_categories")
+}
+
+model ForumThread {
+  id         String   @id @default(cuid())
+  categoryId String   @map("category_id")
+  category   ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  authorId   String   @map("author_id")
+  author     User     @relation("ThreadAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  title      String
+  body       String   @db.Text
+  isPinned   Boolean  @default(false) @map("is_pinned")
+  isLocked   Boolean  @default(false) @map("is_locked")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  replies ForumReply[]
+  votes   ForumVote[]
+
+  @@index([categoryId, createdAt])
+  @@map("forum_threads")
+}
+
+model ForumReply {
+  id        String   @id @default(cuid())
+  threadId  String   @map("thread_id")
+  thread    ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId  String   @map("author_id")
+  author    User     @relation("ReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  String?  @map("parent_id")
+  parent    ForumReply?  @relation("ReplyNesting", fields: [parentId], references: [id], onDelete: Cascade)
+  children  ForumReply[] @relation("ReplyNesting")
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  votes ForumVote[]
+
+  @@index([threadId, createdAt])
+  @@map("forum_replies")
+}
+
+model ForumVote {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threadId  String?  @map("thread_id")
+  thread    ForumThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  replyId   String?  @map("reply_id")
+  reply     ForumReply?  @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  value     Int      // +1 or -1
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, threadId])
+  @@unique([userId, replyId])
+  @@map("forum_votes")
+}
+
+// ─── Store ─────────────────────────────────────────────────────────────────
+
+enum ProductType {
+  PHYSICAL
+  DIGITAL
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLED
+  CANCELLED
+  REFUNDED
+}
+
+enum Currency {
+  NGN
+  USD
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  title       String
+  description String      @db.Text
+  type        ProductType
+  priceNgn    Int         @map("price_ngn") // kobo
+  priceUsd    Int         @map("price_usd") // cents
+  stock       Int         @default(0)
+  imageKey    String?     @map("image_key")
+  digitalKey  String?     @map("digital_key") // R2 key for ebook/firmware
+  isPublished Boolean     @default(false) @map("is_published")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String?     @map("user_id")
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email           String
+  status          OrderStatus @default(PENDING)
+  currency        Currency
+  totalAmount     Int         @map("total_amount") // lowest currency unit
+  paymentProvider String?     @map("payment_provider") // paystack | stripe
+  paymentRef      String?     @unique @map("payment_ref")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  items OrderItem[]
+
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String  @map("order_id")
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int     @default(1)
+  unitPrice Int     @map("unit_price")
+
+  @@map("order_items")
+}

@@ -1,0 +1,11 @@
+# Developer overrides (optional). Hybrid local recommended:
+#   pnpm db:up
+#   pnpm dev:server
+#   pnpm dev:client
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+  redis:
+    ports:
+      - "6379:6379"
