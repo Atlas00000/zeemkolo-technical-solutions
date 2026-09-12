@@ -23,6 +23,12 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().default("noreply@zeemkolo.com"),
   ADMIN_EMAIL: z.string().default("admin@zeemkolo.com"),
   UPLOAD_DIR: z.string().default("uploads"),
+  /** When true (or NODE_ENV=production), R2 must be fully configured — no local/HMAC fallback. */
+  R2_REQUIRED: z
+    .string()
+    .optional()
+    .default("false")
+    .transform((v) => ["1", "true", "yes", "on"].includes(v.toLowerCase())),
   R2_ACCOUNT_ID: z.string().optional().default(""),
   R2_ACCESS_KEY_ID: z.string().optional().default(""),
   R2_SECRET_ACCESS_KEY: z.string().optional().default(""),

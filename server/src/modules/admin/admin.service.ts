@@ -270,51 +270,278 @@ export async function listOrders(input?: { status?: OrderStatus }) {
 
 export async function updateProduct(input: {
   productId: string;
+  title?: string;
+  description?: string;
+  slug?: string;
   stock?: number;
   isPublished?: boolean;
   priceNgn?: number;
   priceUsd?: number;
+  imageKey?: string | null;
+  digitalKey?: string | null;
 }) {
   const existing = await prisma.product.findUnique({
     where: { id: input.productId },
   });
   if (!existing) throw new AdminError("Product not found", 404);
 
+  if (input.slug && input.slug !== existing.slug) {
+    const clash = await prisma.product.findUnique({ where: { slug: input.slug } });
+    if (clash) throw new AdminError("Product slug already exists", 409);
+  }
+
   const updated = await prisma.product.update({
     where: { id: input.productId },
     data: {
+      ...(input.title !== undefined ? { title: input.title } : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
+      ...(input.slug !== undefined ? { slug: input.slug } : {}),
       ...(input.stock !== undefined ? { stock: input.stock } : {}),
       ...(input.isPublished !== undefined
         ? { isPublished: input.isPublished }
         : {}),
       ...(input.priceNgn !== undefined ? { priceNgn: input.priceNgn } : {}),
       ...(input.priceUsd !== undefined ? { priceUsd: input.priceUsd } : {}),
+      ...(input.imageKey !== undefined ? { imageKey: input.imageKey } : {}),
+      ...(input.digitalKey !== undefined ? { digitalKey: input.digitalKey } : {}),
     },
   });
 
-  return {
-    id: updated.id,
-    slug: updated.slug,
-    title: updated.title,
-    stock: updated.stock,
-    isPublished: updated.isPublished,
-    priceNgn: updated.priceNgn,
-    priceUsd: updated.priceUsd,
-  };
+  return mapProduct(updated);
 }
 
-export async function listProductsAdmin() {
-  const products = await prisma.product.findMany({ orderBy: { title: "asc" } });
-  return products.map((p) => ({
+export async function createProduct(input: {
+  slug: string;
+  title: string;
+  description: string;
+  type: "PHYSICAL" | "DIGITAL";
+  priceNgn: number;
+  priceUsd: number;
+  stock?: number;
+  isPublished?: boolean;
+  imageKey?: string | null;
+  digitalKey?: string | null;
+}) {
+  const clash = await prisma.product.findUnique({ where: { slug: input.slug } });
+  if (clash) throw new AdminError("Product slug already exists", 409);
+
+  const created = await prisma.product.create({
+    data: {
+      slug: input.slug,
+      title: input.title,
+      description: input.description,
+      type: input.type,
+      priceNgn: input.priceNgn,
+      priceUsd: input.priceUsd,
+      stock: input.stock ?? 0,
+      isPublished: input.isPublished ?? false,
+      imageKey: input.imageKey ?? null,
+      digitalKey: input.digitalKey ?? null,
+    },
+  });
+
+  return mapProduct(created);
+}
+
+function mapProduct(p: {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  type: string;
+  stock: number;
+  isPublished: boolean;
+  priceNgn: number;
+  priceUsd: number;
+  imageKey: string | null;
+  digitalKey: string | null;
+}) {
+  return {
     id: p.id,
     slug: p.slug,
     title: p.title,
+    description: p.description,
     type: p.type,
     stock: p.stock,
     isPublished: p.isPublished,
     priceNgn: p.priceNgn,
     priceUsd: p.priceUsd,
+    imageKey: p.imageKey,
+    digitalKey: p.digitalKey,
+  };
+}
+
+export async function listProductsAdmin() {
+  const products = await prisma.product.findMany({ orderBy: { title: "asc" } });
+  return products.map(mapProduct);
+}
+
+export async function listCoursesAdmin() {
+  const courses = await prisma.course.findMany({
+    orderBy: { sortOrder: "asc" },
+    include: {
+      modules: {
+        orderBy: { sortOrder: "asc" },
+        include: {
+          lessons: {
+            orderBy: { sortOrder: "asc" },
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              isPreview: true,
+              isPublished: true,
+              schematicKey: true,
+              videoUrl: true,
+              sortOrder: true,
+              markdownBody: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return courses.map((c) => ({
+    id: c.id,
+    slug: c.slug,
+    title: c.title,
+    description: c.description,
+    isPublished: c.isPublished,
+    sortOrder: c.sortOrder,
+    modules: c.modules.map((m) => ({
+      id: m.id,
+      slug: m.slug,
+      title: m.title,
+      description: m.description,
+      sortOrder: m.sortOrder,
+      lessons: m.lessons,
+    })),
   }));
+}
+
+export async function upsertCourse(input: {
+  id?: string;
+  slug: string;
+  title: string;
+  description: string;
+  isPublished?: boolean;
+  sortOrder?: number;
+}) {
+  if (input.id) {
+    const existing = await prisma.course.findUnique({ where: { id: input.id } });
+    if (!existing) throw new AdminError("Course not found", 404);
+    return prisma.course.update({
+      where: { id: input.id },
+      data: {
+        slug: input.slug,
+        title: input.title,
+        description: input.description,
+        isPublished: input.isPublished ?? existing.isPublished,
+        sortOrder: input.sortOrder ?? existing.sortOrder,
+      },
+    });
+  }
+
+  const clash = await prisma.course.findUnique({ where: { slug: input.slug } });
+  if (clash) throw new AdminError("Course slug already exists", 409);
+
+  return prisma.course.create({
+    data: {
+      slug: input.slug,
+      title: input.title,
+      description: input.description,
+      isPublished: input.isPublished ?? false,
+      sortOrder: input.sortOrder ?? 0,
+    },
+  });
+}
+
+export async function upsertModule(input: {
+  id?: string;
+  courseId: string;
+  slug: string;
+  title: string;
+  description?: string | null;
+  sortOrder?: number;
+}) {
+  const course = await prisma.course.findUnique({ where: { id: input.courseId } });
+  if (!course) throw new AdminError("Course not found", 404);
+
+  if (input.id) {
+    const existing = await prisma.module.findUnique({ where: { id: input.id } });
+    if (!existing) throw new AdminError("Module not found", 404);
+    return prisma.module.update({
+      where: { id: input.id },
+      data: {
+        slug: input.slug,
+        title: input.title,
+        description: input.description ?? null,
+        sortOrder: input.sortOrder ?? existing.sortOrder,
+      },
+    });
+  }
+
+  return prisma.module.create({
+    data: {
+      courseId: input.courseId,
+      slug: input.slug,
+      title: input.title,
+      description: input.description ?? null,
+      sortOrder: input.sortOrder ?? 0,
+    },
+  });
+}
+
+export async function upsertLesson(input: {
+  id?: string;
+  moduleId: string;
+  slug: string;
+  title: string;
+  markdownBody: string;
+  schematicKey?: string | null;
+  videoUrl?: string | null;
+  codeBundleKey?: string | null;
+  isPreview?: boolean;
+  isPublished?: boolean;
+  sortOrder?: number;
+}) {
+  const mod = await prisma.module.findUnique({ where: { id: input.moduleId } });
+  if (!mod) throw new AdminError("Module not found", 404);
+
+  if (input.id) {
+    const existing = await prisma.lesson.findUnique({ where: { id: input.id } });
+    if (!existing) throw new AdminError("Lesson not found", 404);
+    return prisma.lesson.update({
+      where: { id: input.id },
+      data: {
+        slug: input.slug,
+        title: input.title,
+        markdownBody: input.markdownBody,
+        schematicKey: input.schematicKey ?? null,
+        videoUrl: input.videoUrl ?? null,
+        codeBundleKey: input.codeBundleKey ?? null,
+        isPreview: input.isPreview ?? existing.isPreview,
+        isPublished: input.isPublished ?? existing.isPublished,
+        sortOrder: input.sortOrder ?? existing.sortOrder,
+      },
+    });
+  }
+
+  return prisma.lesson.create({
+    data: {
+      moduleId: input.moduleId,
+      slug: input.slug,
+      title: input.title,
+      markdownBody: input.markdownBody,
+      schematicKey: input.schematicKey ?? null,
+      videoUrl: input.videoUrl ?? null,
+      codeBundleKey: input.codeBundleKey ?? null,
+      isPreview: input.isPreview ?? false,
+      isPublished: input.isPublished ?? false,
+      sortOrder: input.sortOrder ?? 0,
+    },
+  });
 }
 
 export async function listForumThreadsAdmin(limit = 50) {

@@ -8,17 +8,21 @@ import {
   adminListAudit,
   adminListConsultations,
   adminListForumThreads,
+  adminListLmsCourses,
   adminListMatrics,
   adminListOrders,
   adminListProducts,
   adminRevokeMatric,
   adminSetForumThreadLocked,
   adminUpdateConsultationStatus,
-  adminUpdateProduct,
   fetchMe,
   type AppUser,
 } from "@/lib/api-client";
 import { MatricGeneratorModal } from "@/components/admin/MatricGeneratorModal";
+import {
+  AdminLmsCms,
+  AdminStoreCms,
+} from "@/components/admin/AdminContentCms";
 
 const SECTIONS = [
   { id: "overview", label: "Overview" },
@@ -26,6 +30,7 @@ const SECTIONS = [
   { id: "consultations", label: "Consultations" },
   { id: "orders", label: "Orders" },
   { id: "store", label: "Store" },
+  { id: "lms", label: "LMS" },
   { id: "forum", label: "Forum" },
   { id: "audit", label: "Audit" },
 ] as const;
@@ -68,6 +73,9 @@ export function AdminDashboard() {
   const [products, setProducts] = useState<
     Awaited<ReturnType<typeof adminListProducts>>["products"]
   >([]);
+  const [courses, setCourses] = useState<
+    Awaited<ReturnType<typeof adminListLmsCourses>>["courses"]
+  >([]);
   const [threads, setThreads] = useState<
     Awaited<ReturnType<typeof adminListForumThreads>>["threads"]
   >([]);
@@ -89,12 +97,13 @@ export function AdminDashboard() {
       setMe(user);
       if (user.role !== "ADMIN") return;
 
-      const [ov, m, c, o, p, f, a] = await Promise.all([
+      const [ov, m, c, o, p, lms, f, a] = await Promise.all([
         adminGetOverview(t),
         adminListMatrics(t, { filter: matricFilter, limit: 200 }),
         adminListConsultations(t, consultationFilter || undefined),
         adminListOrders(t, orderFilter || undefined),
         adminListProducts(t),
+        adminListLmsCourses(t),
         adminListForumThreads(t),
         adminListAudit(t, 40),
       ]);
@@ -103,6 +112,7 @@ export function AdminDashboard() {
       setConsultations(c.consultations);
       setOrders(o.orders);
       setProducts(p.products);
+      setCourses(lms.courses);
       setThreads(f.threads);
       setAudit(a.events);
     } catch (err) {
@@ -390,55 +400,11 @@ export function AdminDashboard() {
       ) : null}
 
       {section === "store" ? (
-        <section className="space-y-4">
-          <h2 className="font-display text-2xl text-brand-ink">Store inventory</h2>
-          <ul className="space-y-4">
-            {products.map((p) => (
-              <li key={p.id} className="border-t border-brand-steel/15 pt-4">
-                <p className="font-medium text-brand-ink">
-                  {p.title}{" "}
-                  <span className="text-sm text-brand-steel/70">({p.type})</span>
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-                  <label className="text-brand-steel">
-                    Stock
-                    <input
-                      type="number"
-                      min={0}
-                      defaultValue={p.stock}
-                      className="ml-2 w-20 border border-brand-steel/25 bg-white px-2 py-1"
-                      onBlur={(e) => {
-                        const stock = Number(e.target.value);
-                        if (!Number.isFinite(stock) || stock === p.stock) return;
-                        void (async () => {
-                          await adminUpdateProduct(p.id, { stock }, token);
-                          await load();
-                        })();
-                      }}
-                    />
-                  </label>
-                  <label className="flex items-center gap-2 text-brand-steel">
-                    <input
-                      type="checkbox"
-                      checked={p.isPublished}
-                      onChange={(e) => {
-                        void (async () => {
-                          await adminUpdateProduct(
-                            p.id,
-                            { isPublished: e.target.checked },
-                            token,
-                          );
-                          await load();
-                        })();
-                      }}
-                    />
-                    Published
-                  </label>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <AdminStoreCms token={token} products={products} onChanged={() => void load()} />
+      ) : null}
+
+      {section === "lms" ? (
+        <AdminLmsCms token={token} courses={courses} onChanged={() => void load()} />
       ) : null}
 
       {section === "forum" ? (

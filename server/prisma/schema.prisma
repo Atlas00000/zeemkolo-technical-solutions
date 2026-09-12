@@ -134,6 +134,7 @@ model Lesson {
   schematicKey  String?  @map("schematic_key") // R2 / public path
   codeBundleKey String?  @map("code_bundle_key")
   isPreview     Boolean  @default(false) @map("is_preview") // Module 1 / public preview
+  isPublished   Boolean  @default(false) @map("is_published")
   sortOrder     Int      @default(0) @map("sort_order")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")

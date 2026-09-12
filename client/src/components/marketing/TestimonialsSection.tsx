@@ -1,20 +1,20 @@
 const quotes = [
   {
     quote:
-      "They caught a power-rail sequencing issue before we ordered the next PCB spin. Saved us a full revision cycle.",
-    name: "Hardware lead",
-    org: "Industrial IoT startup",
+      "Zeemkolo reviewed our power rail sequencing before the next PCB spin — we avoided a full board revision and shipped the pilot on schedule.",
+    name: "Hardware engineering lead",
+    org: "Industrial IoT product team",
   },
   {
     quote:
-      "Zeemble’s lab-first notes finally matched how we train junior firmware engineers on the bench.",
-    name: "Training coordinator",
-    org: "Regional engineering academy",
+      "Zeemble’s lab-first curriculum finally matches how we train junior firmware engineers on the bench, not just in slides.",
+    name: "Academy coordinator",
+    org: "Regional STEM training program",
   },
   {
     quote:
-      "Consultation was practical — scoped agenda, schematic review, and a clear firmware next-step list.",
-    name: "Founder",
+      "The consultation was scoped and practical: schematic notes, firmware next steps, and a clear risk list we could act on the same week.",
+    name: "Founder / technical lead",
     org: "Consumer electronics prototype",
   },
 ];

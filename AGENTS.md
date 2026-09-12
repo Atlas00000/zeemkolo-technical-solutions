@@ -43,7 +43,8 @@ On this Windows machine, `docker-compose` (hyphen) is used if `docker compose` i
 | `NEXT_PUBLIC_API_URL` | `client/.env.local` | Yes | Default `http://localhost:5000` |
 | `CLERK_WEBHOOK_SECRET` | server | Optional | Webhook 503 if unset |
 | `RESEND_API_KEY` | server | Optional | Email skipped if empty |
-| `R2_*` | server | Optional until O2 | Downloads fall back to HMAC token |
+| `R2_*` / `R2_REQUIRED` | server | Optional in dev; required in prod / when `R2_REQUIRED=true` | See `docs/runbooks/r2-storage.md` |
+| `UPLOAD_DIR` | server | Dev fallback | Local consultation uploads when R2 unset |
 | `PAYSTACK_*` / `STRIPE_*` | server | Placeholder | See payments ADR |
 
 **Secrets policy:** never commit `.env`, `server/.env`, or `client/.env.local`. Only empty placeholders belong in `.env.example`. Rotate keys if leaked.
@@ -61,6 +62,7 @@ On this Windows machine, `docker-compose` (hyphen) is used if `docker compose` i
 | Typecheck client | `pnpm --filter @zeemkolo/client exec tsc -p tsconfig.json --noEmit` |
 | Phase tests | `pnpm test:phase1` … `pnpm test:phase7` |
 | Full CI-like | `pnpm typecheck` then `pnpm test:ci` (see `package.json`) |
+| R2 helpers | `pnpm r2:info` / `r2:ls` / `r2:get` (env keys); `pnpm r2:login` / `r2:buckets` (Wrangler) |
 
 ## Locked decisions (do not reverse casually)
 
@@ -82,5 +84,5 @@ See `docs/adr/`:
 ## Related docs
 
 - `CONTRIBUTING.md` — PR / test expectations  
-- `docs/runbooks/` — backup/restore, migrations, admin bootstrap  
+- `docs/runbooks/` — backup/restore, migrations, admin bootstrap, R2 storage, content media
 - `docs/1st-optimization.md` — O0–O7 backlog  

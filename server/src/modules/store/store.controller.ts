@@ -14,6 +14,10 @@ import {
 import { prisma } from "../../config/db.js";
 import { createDownloadGrant, verifyDownloadToken } from "../../utils/r2-signed-url.js";
 import {
+  StorageError,
+  isR2Required,
+} from "../../utils/object-storage.js";
+import {
   handlePaystackEvent,
   handleStripeEvent,
   verifyPaystackSignature,
@@ -41,6 +45,12 @@ function sendStoreError(reply: import("fastify").FastifyReply, error: unknown) {
   if (error instanceof StoreError) {
     return reply.status(error.statusCode).send({
       error: "StoreError",
+      message: error.message,
+    });
+  }
+  if (error instanceof StorageError) {
+    return reply.status(error.statusCode).send({
+      error: "StorageError",
       message: error.message,
     });
   }
@@ -189,6 +199,13 @@ export async function storeRoutes(app: FastifyInstance) {
   );
 
   app.get("/store/downloads/file", async (request, reply) => {
+    if (isR2Required()) {
+      return reply.status(503).send({
+        error: "StorageError",
+        message: "Local download stub is disabled when R2 is required",
+      });
+    }
+
     const q = request.query as { token?: string };
     if (!q.token) {
       return reply.status(400).send({ error: "Missing token" });
@@ -213,7 +230,7 @@ export async function storeRoutes(app: FastifyInstance) {
       .header("Content-Type", "text/plain; charset=utf-8")
       .header(
         "Content-Disposition",
-        `attachment; filename="${verified.digitalKey.split("/").pop() ?? "download.txt"}"`,
+        `attachment; filename="zeemkolo-${verified.productId}.txt"`,
       )
       .send(body);
   });

@@ -1,15 +1,23 @@
 const services = [
   {
-    title: "Firmware & embedded design",
-    body: "MCU bring-up, peripheral drivers, and production-ready firmware architecture for your product.",
+    title: "Hardware Prototyping",
+    body: "Schematic review, PCB guidance, and lab validation so first boards behave in the field — not just on the screen.",
   },
   {
-    title: "Hardware prototyping",
-    body: "Schematic review, PCB guidance, and lab validation so your first boards behave in the field.",
+    title: "Firmware Review",
+    body: "MCU bring-up, peripheral drivers, and production-ready firmware architecture for shipping products.",
   },
   {
-    title: "Product engineering consults",
-    body: "Scoped working sessions for roadmaps, risk review, and go-to-market technical decisions.",
+    title: "Product Design",
+    body: "Scoped sessions for product architecture, risk review, and technical decisions from bench to shipment.",
+  },
+  {
+    title: "Embedded Systems Consulting",
+    body: "Deep-dive support on power, timing, communications, and system integration for complex embedded builds.",
+  },
+  {
+    title: "General Engineering Inquiry",
+    body: "A clear working session when you need an experienced engineering partner to unblock the next decision.",
   },
 ];
 
@@ -24,9 +32,10 @@ export function ServicesGrid() {
           Engineering support from bench to shipment
         </h2>
         <p className="mt-3 max-w-2xl text-brand-steel/80">
-          Zeemkolo Technical Solutions partners with teams shipping real hardware — not slide decks alone.
+          Zeemkolo Technical Solutions partners with teams shipping real hardware —
+          the same service catalog available when you book a consultation.
         </p>
-        <ul className="mt-12 grid gap-10 md:grid-cols-3">
+        <ul className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => (
             <li key={service.title} className="border-t border-brand-steel/20 pt-5">
               <h3 className="font-display text-xl text-brand-ink">{service.title}</h3>

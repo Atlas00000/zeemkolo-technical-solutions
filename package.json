@@ -16,6 +16,13 @@
     "db:down": "docker-compose stop postgres redis",
     "db:logs": "docker-compose logs -f postgres redis",
     "db:backup": "node -e \"require('fs').mkdirSync('backups',{recursive:true})\" && docker exec zeemkolo_postgres pg_dump -U zeemkolo_admin -d zeemkolo_db --clean --if-exists > backups/zeemkolo_db_latest.sql",
+    "r2:login": "node scripts/r2-wrangler.mjs login",
+    "r2:buckets": "node scripts/r2-wrangler.mjs r2 bucket list",
+    "r2:info": "node scripts/r2.mjs info",
+    "r2:ls": "node scripts/r2.mjs ls",
+    "r2:head": "node scripts/r2.mjs head",
+    "r2:get": "node scripts/r2.mjs get",
+    "r2:put": "node scripts/r2.mjs put",
     "test:phase1": "pnpm --filter @zeemkolo/server test:phase1",
     "test:phase2": "pnpm --filter @zeemkolo/server test:phase2",
     "test:phase3": "pnpm --filter @zeemkolo/server test:phase3",
@@ -26,5 +33,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "wrangler": "^3.114.15"
   }
 }

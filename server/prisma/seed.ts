@@ -53,6 +53,7 @@ async function main() {
                   slug: "welcome-to-zeemble",
                   title: "Welcome to Zeemble",
                   isPreview: true,
+                  isPublished: true,
                   sortOrder: 1,
                   schematicKey: "/schematics/sample-circuit.svg",
                   markdownBody: `# Welcome to Zeemble
@@ -94,6 +95,7 @@ Use the schematic viewer below to pan and zoom the sample circuit.
                   slug: "lab-safety-and-tools",
                   title: "Lab Safety and Tools",
                   isPreview: false,
+                  isPublished: true,
                   sortOrder: 2,
                   markdownBody: `# Lab Safety and Tools
 
@@ -183,6 +185,7 @@ pio device monitor -b 115200
     where: { slug: "welcome-to-zeemble" },
     data: {
       isPreview: true,
+      isPublished: true,
       schematicKey: "/schematics/sample-circuit.svg",
       markdownBody: welcomeMarkdown,
     },
@@ -192,6 +195,7 @@ pio device monitor -b 115200
     where: { slug: "lab-safety-and-tools" },
     data: {
       isPreview: false,
+      isPublished: true,
       markdownBody: labMarkdown,
     },
   });

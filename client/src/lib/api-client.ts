@@ -531,22 +531,52 @@ export function adminListProducts(token: string) {
       id: string;
       slug: string;
       title: string;
+      description: string;
       type: string;
       stock: number;
       isPublished: boolean;
       priceNgn: number;
       priceUsd: number;
+      imageKey: string | null;
+      digitalKey: string | null;
     }[];
   }>("/admin/products", { token });
+}
+
+export function adminCreateProduct(
+  input: {
+    slug: string;
+    title: string;
+    description: string;
+    type: "PHYSICAL" | "DIGITAL";
+    priceNgn: number;
+    priceUsd: number;
+    stock?: number;
+    isPublished?: boolean;
+    imageKey?: string | null;
+    digitalKey?: string | null;
+  },
+  token: string,
+) {
+  return apiFetch<{ id: string; slug: string }>("/admin/products", {
+    method: "POST",
+    token,
+    body: JSON.stringify(input),
+  });
 }
 
 export function adminUpdateProduct(
   id: string,
   input: {
+    title?: string;
+    description?: string;
+    slug?: string;
     stock?: number;
     isPublished?: boolean;
     priceNgn?: number;
     priceUsd?: number;
+    imageKey?: string | null;
+    digitalKey?: string | null;
   },
   token: string,
 ) {
@@ -554,6 +584,98 @@ export function adminUpdateProduct(
     `/admin/products/${id}`,
     {
       method: "PATCH",
+      token,
+      body: JSON.stringify(input),
+    },
+  );
+}
+
+export function adminListLmsCourses(token: string) {
+  return apiFetch<{
+    courses: {
+      id: string;
+      slug: string;
+      title: string;
+      description: string;
+      isPublished: boolean;
+      sortOrder: number;
+      modules: {
+        id: string;
+        slug: string;
+        title: string;
+        description: string | null;
+        sortOrder: number;
+        lessons: {
+          id: string;
+          slug: string;
+          title: string;
+          isPreview: boolean;
+          isPublished: boolean;
+          schematicKey: string | null;
+          videoUrl: string | null;
+          sortOrder: number;
+          markdownBody: string;
+        }[];
+      }[];
+    }[];
+  }>("/admin/lms/courses", { token });
+}
+
+export function adminUpsertCourse(
+  input: {
+    id?: string;
+    slug: string;
+    title: string;
+    description: string;
+    isPublished?: boolean;
+    sortOrder?: number;
+  },
+  token: string,
+) {
+  return apiFetch<{ id: string; slug: string }>("/admin/lms/courses", {
+    method: "POST",
+    token,
+    body: JSON.stringify(input),
+  });
+}
+
+export function adminUpsertModule(
+  input: {
+    id?: string;
+    courseId: string;
+    slug: string;
+    title: string;
+    description?: string | null;
+    sortOrder?: number;
+  },
+  token: string,
+) {
+  return apiFetch<{ id: string; slug: string }>("/admin/lms/modules", {
+    method: "POST",
+    token,
+    body: JSON.stringify(input),
+  });
+}
+
+export function adminUpsertLesson(
+  input: {
+    id?: string;
+    moduleId: string;
+    slug: string;
+    title: string;
+    markdownBody: string;
+    schematicKey?: string | null;
+    videoUrl?: string | null;
+    isPreview?: boolean;
+    isPublished?: boolean;
+    sortOrder?: number;
+  },
+  token: string,
+) {
+  return apiFetch<{ id: string; slug: string; isPublished: boolean }>(
+    "/admin/lms/lessons",
+    {
+      method: "POST",
       token,
       body: JSON.stringify(input),
     },

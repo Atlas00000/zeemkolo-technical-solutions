@@ -1,47 +1,14 @@
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "../config/env.js";
+import {
+  DOWNLOAD_TTL_SECONDS,
+  StorageError,
+  createR2SignedDownloadUrl,
+  isR2Configured,
+  isR2Required,
+} from "./object-storage.js";
 
-const DOWNLOAD_TTL_SECONDS = 15 * 60;
-
-function r2Configured() {
-  return Boolean(
-    env.R2_ENDPOINT && env.R2_ACCESS_KEY_ID && env.R2_SECRET_ACCESS_KEY,
-  );
-}
-
-function s3Client() {
-  return new S3Client({
-    region: "auto",
-    endpoint: env.R2_ENDPOINT,
-    credentials: {
-      accessKeyId: env.R2_ACCESS_KEY_ID,
-      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-    },
-  });
-}
-
-export async function createR2SignedDownloadUrl(key: string) {
-  if (!r2Configured()) {
-    return null;
-  }
-
-  const command = new GetObjectCommand({
-    Bucket: env.R2_BUCKET_NAME,
-    Key: key,
-  });
-
-  const url = await getSignedUrl(s3Client(), command, {
-    expiresIn: DOWNLOAD_TTL_SECONDS,
-  });
-
-  return {
-    url,
-    expiresInSeconds: DOWNLOAD_TTL_SECONDS,
-    provider: "r2" as const,
-  };
-}
+export { createR2SignedDownloadUrl, DOWNLOAD_TTL_SECONDS };
 
 /** HMAC download token used when R2 is unavailable (local/dev fallback). */
 export function issueDownloadToken(input: {
@@ -97,6 +64,18 @@ export async function createDownloadGrant(input: {
 }) {
   const signed = await createR2SignedDownloadUrl(input.digitalKey);
   if (signed) return signed;
+
+  if (isR2Required()) {
+    throw new StorageError(
+      "R2 is required for digital downloads but is not configured",
+      503,
+    );
+  }
+
+  // Development / test fallback only when R2 is optional and unset.
+  if (isR2Configured()) {
+    throw new StorageError("R2 signed URL could not be created", 503);
+  }
 
   const token = issueDownloadToken(input);
   const base = input.publicApiBase ?? `http://localhost:${env.PORT}`;

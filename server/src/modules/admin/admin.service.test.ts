@@ -3,14 +3,17 @@ import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "../../config/db.js";
 import {
   batchGenerateMatrics,
+  createProduct,
   getAdminOverview,
   listConsultations,
+  listCoursesAdmin,
   listForumThreadsAdmin,
   listMatrics,
   revokeMatric,
   setForumThreadLocked,
   updateConsultationStatus,
   updateProduct,
+  upsertLesson,
   writeAuditLog,
   listAuditLogs,
 } from "./admin.service.js";
@@ -136,5 +139,42 @@ describe("admin.service (O1)", () => {
 
     const events = await listAuditLogs(20);
     expect(events.some((e) => e.action === "test.o1_audit")).toBe(true);
+  });
+
+  it("creates a draft product and lists LMS courses for admin", async () => {
+    const slug = `o3-test-kit-${Date.now()}`;
+    const product = await createProduct({
+      slug,
+      title: "O3 Test Kit",
+      description: "Temporary product for O3 admin CMS test.",
+      type: "PHYSICAL",
+      priceNgn: 1000,
+      priceUsd: 100,
+      stock: 1,
+      isPublished: false,
+    });
+    expect(product.slug).toBe(slug);
+    expect(product.isPublished).toBe(false);
+
+    const courses = await listCoursesAdmin();
+    expect(courses.length).toBeGreaterThan(0);
+    const lesson = courses[0]!.modules[0]!.lessons[0]!;
+    expect(lesson).toHaveProperty("isPublished");
+
+    const updated = await upsertLesson({
+      id: lesson.id,
+      moduleId: courses[0]!.modules[0]!.id,
+      slug: lesson.slug,
+      title: lesson.title,
+      markdownBody: lesson.markdownBody,
+      schematicKey: lesson.schematicKey,
+      videoUrl: lesson.videoUrl,
+      isPreview: lesson.isPreview,
+      isPublished: lesson.isPublished,
+      sortOrder: lesson.sortOrder,
+    });
+    expect(updated.id).toBe(lesson.id);
+
+    await prisma.product.delete({ where: { id: product.id } });
   });
 });

@@ -58,6 +58,37 @@ describe("lms.service (Phase 3)", () => {
     expect(lesson.markdownBody.length).toBeGreaterThan(280);
   });
 
+  it("hides unpublished lessons from student catalog and detail", async () => {
+    const course = await getCourseBySlug("embedded-systems-foundations");
+    const lesson = course.modules[0]!.lessons[0]!;
+
+    await prisma.lesson.update({
+      where: { id: lesson.id },
+      data: { isPublished: false },
+    });
+
+    try {
+      const listed = await listPublishedCourses();
+      const embedded = listed.find((c) => c.slug === "embedded-systems-foundations");
+      expect(
+        embedded!.modules[0]!.lessons.some((l) => l.id === lesson.id),
+      ).toBe(false);
+
+      await expect(
+        getLessonBySlugs({
+          courseSlug: "embedded-systems-foundations",
+          lessonSlug: lesson.slug,
+          role: Role.ZEEMBLE_STUDENT,
+        }),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    } finally {
+      await prisma.lesson.update({
+        where: { id: lesson.id },
+        data: { isPublished: true },
+      });
+    }
+  });
+
   it("upserts progress and computes course percent", async () => {
     const course = await getCourseBySlug("embedded-systems-foundations");
     const lessonId = course.modules[0]!.lessons[0]!.id;

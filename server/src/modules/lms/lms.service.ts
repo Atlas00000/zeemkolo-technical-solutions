@@ -31,6 +31,7 @@ export async function listPublishedCourses() {
         orderBy: { sortOrder: "asc" },
         include: {
           lessons: {
+            where: { isPublished: true },
             orderBy: { sortOrder: "asc" },
             select: {
               id: true,
@@ -68,6 +69,7 @@ export async function getCourseBySlug(courseSlug: string) {
         orderBy: { sortOrder: "asc" },
         include: {
           lessons: {
+            where: { isPublished: true },
             orderBy: { sortOrder: "asc" },
             select: {
               id: true,
@@ -109,6 +111,7 @@ export async function getLessonBySlugs(input: {
   const lesson = await prisma.lesson.findFirst({
     where: {
       slug: input.lessonSlug,
+      isPublished: true,
       module: {
         course: {
           slug: input.courseSlug,
@@ -121,6 +124,7 @@ export async function getLessonBySlugs(input: {
         include: {
           course: true,
           lessons: {
+            where: { isPublished: true },
             orderBy: { sortOrder: "asc" },
             select: {
               id: true,
@@ -173,8 +177,13 @@ export async function upsertLessonProgress(input: {
   lessonId: string;
   completed: boolean;
 }) {
-  const lesson = await prisma.lesson.findUnique({ where: { id: input.lessonId } });
-  if (!lesson) {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: input.lessonId },
+    include: {
+      module: { include: { course: true } },
+    },
+  });
+  if (!lesson || !lesson.isPublished || !lesson.module.course.isPublished) {
     throw new LmsError("Lesson not found", 404);
   }
 
@@ -209,6 +218,7 @@ export async function getCourseProgress(input: {
         orderBy: { sortOrder: "asc" },
         include: {
           lessons: {
+            where: { isPublished: true },
             orderBy: { sortOrder: "asc" },
             select: { id: true, slug: true, title: true, sortOrder: true },
           },

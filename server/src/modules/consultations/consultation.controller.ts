@@ -3,6 +3,7 @@ import { z } from "zod";
 import { optionalAuth } from "../../middleware/optional-auth.middleware.js";
 import { rateLimitConsultationBook } from "../../middleware/rate-limiter.js";
 import { saveConsultationUpload } from "../../utils/local-upload.js";
+import { StorageError } from "../../utils/object-storage.js";
 import {
   ConsultationError,
   SERVICE_TYPES,
@@ -106,12 +107,25 @@ export async function consultationRoutes(app: FastifyInstance) {
         });
       }
 
-      const key = await saveConsultationUpload({
-        filename: body.filename,
-        buffer,
-      });
+      try {
+        const saved = await saveConsultationUpload({
+          filename: body.filename,
+          buffer,
+        });
 
-      return { attachmentKey: key };
+        return {
+          attachmentKey: saved.key,
+          provider: saved.provider,
+        };
+      } catch (error) {
+        if (error instanceof StorageError) {
+          return reply.status(error.statusCode).send({
+            error: "StorageError",
+            message: error.message,
+          });
+        }
+        throw error;
+      }
     },
   );
 }

@@ -99,6 +99,8 @@
 
 ## Phase O2 — R2 storage cutover
 
+**Status: complete (2026-09-12)**
+
 *Replace local-disk uploads and stub downloads with Cloudflare R2.*
 
 | Day / slice | Workstream | Deliverable | Acceptance |
@@ -109,9 +111,17 @@
 | O2.4 | Fallback | Keep HMAC/local fallback only when R2 unset in development | Production-shaped env fails closed if R2 missing |
 | O2.5 | Admin | Optional: list/delete orphan upload keys (basic) | Staff can see attachment key on consultation detail |
 
+**Shipped:**
+- `R2_REQUIRED` + production fail-closed via `assertStorageConfig()` at API boot
+- Consultation upload PutObject when R2 configured; local `UPLOAD_DIR` only in optional mode
+- Digital downloads: 15‑min R2 signed URL when configured; HMAC stub only when R2 optional
+- `docs/runbooks/r2-storage.md`; admin already shows `attachmentKey` (O1)
+
 ---
 
 ## Phase O3 — Content pipeline
+
+**Status: complete (2026-09-12)**
 
 *Stop relying only on seed data for lessons and catalog.*
 
@@ -122,6 +132,12 @@
 | O3.3 | Store CMS (basic) | Create/edit product fields from admin | New product appears in `/store` when published |
 | O3.4 | Marketing copy | Replace placeholder testimonials/services with approved copy | Homepage reflects real Zeemkolo messaging |
 | O3.5 | Media guide | Doc: where schematics/videos live (R2 keys vs `public/`) | Content authors have a written path |
+
+**Shipped:**
+- `Lesson.isPublished` + student LMS filters; seed lessons published
+- Admin LMS + Store CMS sections (`/admin`); product create + richer updates
+- Homepage services aligned with consultation catalog; refreshed testimonials
+- `docs/runbooks/content-media.md`
 
 ---
 
@@ -300,6 +316,8 @@ O4 should start as soon as O0 completes (does not need to wait for all content).
 | :--- | :--- |
 | `roadmap.md` | Master engineering roadmap (Phases 0–8) |
 | `docs/runbooks/admin-bootstrap.md` | Promote Clerk user → ADMIN + MFA checklist |
+| `docs/runbooks/r2-storage.md` | R2 modes, keys, fail-closed / local fallback |
+| `docs/runbooks/content-media.md` | Schematics/videos: public vs R2; authoring checklist |
 | `docs/dev-notes/payments-provider-pending.md` | Payment placeholder policy |
 | `docs/dev-notes/qr-redirect-inventory.md` | QR 301 map placeholders |
 | `docs/dev-notes/security-hardening.md` | Rate limits & headers checklist |
