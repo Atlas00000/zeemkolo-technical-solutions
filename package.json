@@ -11,7 +11,10 @@
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint",
     "typecheck": "pnpm --filter @zeemkolo/server lint && pnpm --filter @zeemkolo/client exec tsc -p tsconfig.json --noEmit",
-    "test:ci": "pnpm --filter @zeemkolo/server exec vitest run src/modules",
+    "test:ci": "pnpm --filter @zeemkolo/server exec vitest run src/modules src/utils",
+    "test:e2e": "playwright test",
+    "test:e2e:http": "node scripts/o5-e2e-http-smoke.mjs",
+    "audit:deps": "pnpm audit --audit-level=high",
     "db:up": "docker-compose up -d postgres redis",
     "db:down": "docker-compose stop postgres redis",
     "db:logs": "docker-compose logs -f postgres redis",
@@ -35,6 +38,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "wrangler": "^3.114.15"
   }
 }

@@ -2,6 +2,13 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { optionalAuth } from "../../middleware/optional-auth.middleware.js";
 import { rateLimitConsultationBook } from "../../middleware/rate-limiter.js";
+import { sendApiError } from "../../utils/api-error.js";
+import {
+  beginIdempotency,
+  getIdempotentResponse,
+  readIdempotencyKey,
+  saveIdempotentResponse,
+} from "../../utils/idempotency.js";
 import { saveConsultationUpload } from "../../utils/local-upload.js";
 import { StorageError } from "../../utils/object-storage.js";
 import {
@@ -45,10 +52,33 @@ export async function consultationRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const parsed = bookBodySchema.safeParse(request.body);
       if (!parsed.success) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: parsed.error.flatten(),
-        });
+        return sendApiError(
+          request,
+          reply,
+          400,
+          "ValidationError",
+          JSON.stringify(parsed.error.flatten()),
+          "validation_failed",
+        );
+      }
+
+      const idemKey = readIdempotencyKey(request.headers["idempotency-key"]);
+      if (idemKey) {
+        const phase = await beginIdempotency("consultations", idemKey);
+        if (phase === "replay") {
+          const cached = await getIdempotentResponse("consultations", idemKey);
+          return reply.status(cached!.statusCode).send(cached!.body);
+        }
+        if (phase === "inflight") {
+          return sendApiError(
+            request,
+            reply,
+            409,
+            "IdempotencyConflict",
+            "Idempotency key is already in progress",
+            "idempotency_inflight",
+          );
+        }
       }
 
       try {
@@ -63,20 +93,30 @@ export async function consultationRoutes(app: FastifyInstance) {
           userId: request.auth?.user.id,
         });
 
-        return reply.status(201).send({
+        const body = {
           id: result.consultation.id,
           status: result.consultation.status,
           serviceType: result.consultation.serviceType,
           slotStartsAt: result.consultation.slotStartsAt.toISOString(),
           timezone: result.consultation.timezone,
           email: result.email,
-        });
+        };
+        if (idemKey) {
+          await saveIdempotentResponse("consultations", idemKey, {
+            statusCode: 201,
+            body,
+          });
+        }
+        return reply.status(201).send(body);
       } catch (error) {
         if (error instanceof ConsultationError) {
-          return reply.status(error.statusCode).send({
-            error: "ConsultationError",
-            message: error.message,
-          });
+          return sendApiError(
+            request,
+            reply,
+            error.statusCode,
+            "ConsultationError",
+            error.message,
+          );
         }
         throw error;
       }
@@ -93,18 +133,26 @@ export async function consultationRoutes(app: FastifyInstance) {
       };
 
       if (!body?.filename || !body?.contentBase64) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: "filename and contentBase64 are required",
-        });
+        return sendApiError(
+          request,
+          reply,
+          400,
+          "ValidationError",
+          "filename and contentBase64 are required",
+          "validation_failed",
+        );
       }
 
       const buffer = Buffer.from(body.contentBase64, "base64");
       if (buffer.byteLength === 0 || buffer.byteLength > 5 * 1024 * 1024) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: "Attachment must be between 1 byte and 5MB",
-        });
+        return sendApiError(
+          request,
+          reply,
+          400,
+          "ValidationError",
+          "Attachment must be between 1 byte and 5MB",
+          "validation_failed",
+        );
       }
 
       try {
@@ -119,10 +167,13 @@ export async function consultationRoutes(app: FastifyInstance) {
         };
       } catch (error) {
         if (error instanceof StorageError) {
-          return reply.status(error.statusCode).send({
-            error: "StorageError",
-            message: error.message,
-          });
+          return sendApiError(
+            request,
+            reply,
+            error.statusCode,
+            "StorageError",
+            error.message,
+          );
         }
         throw error;
       }

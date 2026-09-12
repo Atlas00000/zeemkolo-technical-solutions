@@ -38,6 +38,14 @@ const envSchema = z.object({
   PAYSTACK_SECRET_KEY: z.string().optional().default(""),
   STRIPE_WEBHOOK_SECRET: z.string().optional().default(""),
   DOWNLOAD_TOKEN_SECRET: z.string().optional().default("dev-download-token-secret"),
+  /** Optional Sentry DSN — errors are no-ops when empty (O5.1). */
+  SENTRY_DSN: z.string().optional().default(""),
+  /** When true, enable GET /debug/sentry test route (never in production). */
+  SENTRY_ENABLE_TEST_ROUTE: z
+    .string()
+    .optional()
+    .default("false")
+    .transform((v) => ["1", "true", "yes", "on"].includes(v.toLowerCase())),
 });
 
 export const env = envSchema.parse(process.env);

@@ -3,6 +3,7 @@ import { ConsultationStatus, OrderStatus } from "@prisma/client";
 import { z } from "zod";
 import { requireAuth } from "../../middleware/clerk-auth.middleware.js";
 import { requireAdmin } from "../../middleware/rbac.middleware.js";
+import { sendApiError } from "../../utils/api-error.js";
 import {
   AdminError,
   batchGenerateMatrics,
@@ -116,14 +117,36 @@ const forumLockSchema = z.object({
   locked: z.boolean(),
 });
 
-function sendAdminError(reply: import("fastify").FastifyReply, error: unknown) {
+function sendAdminError(
+  request: import("fastify").FastifyRequest,
+  reply: import("fastify").FastifyReply,
+  error: unknown,
+) {
   if (error instanceof AdminError) {
-    return reply.status(error.statusCode).send({
-      error: "AdminError",
-      message: error.message,
-    });
+    return sendApiError(
+      request,
+      reply,
+      error.statusCode,
+      "AdminError",
+      error.message,
+    );
   }
   throw error;
+}
+
+function sendAdminValidation(
+  request: import("fastify").FastifyRequest,
+  reply: import("fastify").FastifyReply,
+  zodError: z.ZodError,
+) {
+  return sendApiError(
+    request,
+    reply,
+    400,
+    "ValidationError",
+    JSON.stringify(zodError.flatten()),
+    "validation_failed",
+  );
 }
 
 function actorId(request: import("fastify").FastifyRequest): string {
@@ -162,10 +185,7 @@ export async function adminRoutes(app: FastifyInstance) {
   app.post("/admin/matrics/batch", guard, async (request, reply) => {
     const parsed = batchMatricSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({
-        error: "ValidationError",
-        message: parsed.error.flatten(),
-      });
+      return sendAdminValidation(request, reply, parsed.error);
     }
 
     try {
@@ -183,7 +203,7 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return reply.status(201).send(result);
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 
@@ -205,29 +225,29 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return result;
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 
   app.get("/admin/consultations", guard, async (request) => {
-    const q = request.query as { status?: string };
+    const q = request.query as { status?: string; limit?: string; cursor?: string };
     const status =
       q.status &&
       Object.values(ConsultationStatus).includes(q.status as ConsultationStatus)
         ? (q.status as ConsultationStatus)
         : undefined;
-    const consultations = await listConsultations({ status });
-    return { consultations };
+    return listConsultations({
+      status,
+      limit: q.limit ? Number(q.limit) : undefined,
+      cursor: q.cursor,
+    });
   });
 
   app.patch("/admin/consultations/:id/status", guard, async (request, reply) => {
     const { id } = request.params as { id: string };
     const parsed = consultationStatusSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({
-        error: "ValidationError",
-        message: parsed.error.flatten(),
-      });
+      return sendAdminValidation(request, reply, parsed.error);
     }
 
     try {
@@ -244,18 +264,21 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return updated;
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 
   app.get("/admin/orders", guard, async (request) => {
-    const q = request.query as { status?: string };
+    const q = request.query as { status?: string; limit?: string; cursor?: string };
     const status =
       q.status && Object.values(OrderStatus).includes(q.status as OrderStatus)
         ? (q.status as OrderStatus)
         : undefined;
-    const orders = await listOrders({ status });
-    return { orders };
+    return listOrders({
+      status,
+      limit: q.limit ? Number(q.limit) : undefined,
+      cursor: q.cursor,
+    });
   });
 
   app.get("/admin/products", guard, async () => {
@@ -266,10 +289,7 @@ export async function adminRoutes(app: FastifyInstance) {
   app.post("/admin/products", guard, async (request, reply) => {
     const parsed = productCreateSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({
-        error: "ValidationError",
-        message: parsed.error.flatten(),
-      });
+      return sendAdminValidation(request, reply, parsed.error);
     }
 
     try {
@@ -283,7 +303,7 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return reply.status(201).send(product);
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 
@@ -291,10 +311,7 @@ export async function adminRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const parsed = productUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({
-        error: "ValidationError",
-        message: parsed.error.flatten(),
-      });
+      return sendAdminValidation(request, reply, parsed.error);
     }
 
     try {
@@ -315,7 +332,7 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return product;
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 
@@ -327,10 +344,7 @@ export async function adminRoutes(app: FastifyInstance) {
   app.post("/admin/lms/courses", guard, async (request, reply) => {
     const parsed = courseUpsertSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({
-        error: "ValidationError",
-        message: parsed.error.flatten(),
-      });
+      return sendAdminValidation(request, reply, parsed.error);
     }
     try {
       const course = await upsertCourse(parsed.data);
@@ -343,17 +357,14 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return reply.status(parsed.data.id ? 200 : 201).send(course);
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 
   app.post("/admin/lms/modules", guard, async (request, reply) => {
     const parsed = moduleUpsertSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({
-        error: "ValidationError",
-        message: parsed.error.flatten(),
-      });
+      return sendAdminValidation(request, reply, parsed.error);
     }
     try {
       const mod = await upsertModule(parsed.data);
@@ -366,17 +377,14 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return reply.status(parsed.data.id ? 200 : 201).send(mod);
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 
   app.post("/admin/lms/lessons", guard, async (request, reply) => {
     const parsed = lessonUpsertSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({
-        error: "ValidationError",
-        message: parsed.error.flatten(),
-      });
+      return sendAdminValidation(request, reply, parsed.error);
     }
     try {
       const lesson = await upsertLesson(parsed.data);
@@ -393,27 +401,23 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return reply.status(parsed.data.id ? 200 : 201).send(lesson);
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 
   app.get("/admin/forum/threads", guard, async (request) => {
-    const q = request.query as { limit?: string };
-    const limit = q.limit ? Number(q.limit) : 50;
-    const threads = await listForumThreadsAdmin(
-      Number.isFinite(limit) ? limit : 50,
-    );
-    return { threads };
+    const q = request.query as { limit?: string; cursor?: string };
+    return listForumThreadsAdmin({
+      limit: q.limit ? Number(q.limit) : undefined,
+      cursor: q.cursor,
+    });
   });
 
   app.patch("/admin/forum/threads/:id/lock", guard, async (request, reply) => {
     const { id } = request.params as { id: string };
     const parsed = forumLockSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({
-        error: "ValidationError",
-        message: parsed.error.flatten(),
-      });
+      return sendAdminValidation(request, reply, parsed.error);
     }
 
     try {
@@ -430,7 +434,7 @@ export async function adminRoutes(app: FastifyInstance) {
       });
       return thread;
     } catch (error) {
-      return sendAdminError(reply, error);
+      return sendAdminError(request, reply, error);
     }
   });
 }

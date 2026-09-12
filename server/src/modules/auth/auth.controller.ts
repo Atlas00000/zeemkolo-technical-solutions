@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../config/db.js";
 import { requireAuth } from "../../middleware/clerk-auth.middleware.js";
 import { rateLimitMatricClaim } from "../../middleware/rate-limiter.js";
+import { sendApiError } from "../../utils/api-error.js";
 import { claimMatric, MatricClaimError } from "./matric.service.js";
 import { handleClerkWebhook } from "./clerk-webhook.js";
 
@@ -39,10 +40,7 @@ export async function authRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const parsed = claimBodySchema.safeParse(request.body);
       if (!parsed.success) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: parsed.error.flatten(),
-        });
+        return sendApiError(request, reply, 400, "ValidationError", JSON.stringify(parsed.error.flatten()), "validation_failed");
       }
 
       try {
@@ -56,10 +54,13 @@ export async function authRoutes(app: FastifyInstance) {
         };
       } catch (error) {
         if (error instanceof MatricClaimError) {
-          return reply.status(error.statusCode).send({
-            error: "MatricClaimError",
-            message: error.message,
-          });
+          return sendApiError(
+            request,
+            reply,
+            error.statusCode,
+            "MatricClaimError",
+            error.message,
+          );
         }
         throw error;
       }

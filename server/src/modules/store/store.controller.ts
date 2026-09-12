@@ -12,6 +12,13 @@ import {
   listProducts,
 } from "./store.service.js";
 import { prisma } from "../../config/db.js";
+import { sendApiError } from "../../utils/api-error.js";
+import {
+  beginIdempotency,
+  getIdempotentResponse,
+  readIdempotencyKey,
+  saveIdempotentResponse,
+} from "../../utils/idempotency.js";
 import { createDownloadGrant, verifyDownloadToken } from "../../utils/r2-signed-url.js";
 import {
   StorageError,
@@ -41,18 +48,28 @@ const createOrderSchema = z.object({
     .max(20),
 });
 
-function sendStoreError(reply: import("fastify").FastifyReply, error: unknown) {
+function sendStoreError(
+  request: import("fastify").FastifyRequest,
+  reply: import("fastify").FastifyReply,
+  error: unknown,
+) {
   if (error instanceof StoreError) {
-    return reply.status(error.statusCode).send({
-      error: "StoreError",
-      message: error.message,
-    });
+    return sendApiError(
+      request,
+      reply,
+      error.statusCode,
+      "StoreError",
+      error.message,
+    );
   }
   if (error instanceof StorageError) {
-    return reply.status(error.statusCode).send({
-      error: "StorageError",
-      message: error.message,
-    });
+    return sendApiError(
+      request,
+      reply,
+      error.statusCode,
+      "StorageError",
+      error.message,
+    );
   }
   throw error;
 }
@@ -75,7 +92,7 @@ export async function storeRoutes(app: FastifyInstance) {
       const product = await getProductBySlug(slug, currency);
       return product;
     } catch (error) {
-      return sendStoreError(reply, error);
+      return sendStoreError(request, reply, error);
     }
   });
 
@@ -85,10 +102,33 @@ export async function storeRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const parsed = createOrderSchema.safeParse(request.body);
       if (!parsed.success) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: parsed.error.flatten(),
-        });
+        return sendApiError(
+          request,
+          reply,
+          400,
+          "ValidationError",
+          JSON.stringify(parsed.error.flatten()),
+          "validation_failed",
+        );
+      }
+
+      const idemKey = readIdempotencyKey(request.headers["idempotency-key"]);
+      if (idemKey) {
+        const phase = await beginIdempotency("store-orders", idemKey);
+        if (phase === "replay") {
+          const cached = await getIdempotentResponse("store-orders", idemKey);
+          return reply.status(cached!.statusCode).send(cached!.body);
+        }
+        if (phase === "inflight") {
+          return sendApiError(
+            request,
+            reply,
+            409,
+            "IdempotencyConflict",
+            "Idempotency key is already in progress",
+            "idempotency_inflight",
+          );
+        }
       }
 
       try {
@@ -99,7 +139,7 @@ export async function storeRoutes(app: FastifyInstance) {
           userId: request.auth?.user.id,
           paymentProvider: parsed.data.paymentProvider,
         });
-        return reply.status(201).send({
+        const body = {
           ...order,
           checkout: {
             message:
@@ -108,9 +148,16 @@ export async function storeRoutes(app: FastifyInstance) {
                 : "In development, POST /store/orders/:id/confirm-test to simulate payment.",
             paymentRef: order.paymentRef,
           },
-        });
+        };
+        if (idemKey) {
+          await saveIdempotentResponse("store-orders", idemKey, {
+            statusCode: 201,
+            body,
+          });
+        }
+        return reply.status(201).send(body);
       } catch (error) {
-        return sendStoreError(reply, error);
+        return sendStoreError(request, reply, error);
       }
     },
   );
@@ -120,13 +167,13 @@ export async function storeRoutes(app: FastifyInstance) {
     try {
       return await getOrderById(orderId);
     } catch (error) {
-      return sendStoreError(reply, error);
+      return sendStoreError(request, reply, error);
     }
   });
 
   app.post("/store/orders/:orderId/confirm-test", async (request, reply) => {
     if (env.NODE_ENV === "production") {
-      return reply.status(404).send({ error: "NotFound" });
+      return sendApiError(request, reply, 404, "NotFound", "Not found");
     }
     const { orderId } = request.params as { orderId: string };
     try {
@@ -140,7 +187,7 @@ export async function storeRoutes(app: FastifyInstance) {
       });
       return order;
     } catch (error) {
-      return sendStoreError(reply, error);
+      return sendStoreError(request, reply, error);
     }
   });
 
@@ -193,26 +240,44 @@ export async function storeRoutes(app: FastifyInstance) {
           ...grant,
         };
       } catch (error) {
-        return sendStoreError(reply, error);
+        return sendStoreError(request, reply, error);
       }
     },
   );
 
   app.get("/store/downloads/file", async (request, reply) => {
     if (isR2Required()) {
-      return reply.status(503).send({
-        error: "StorageError",
-        message: "Local download stub is disabled when R2 is required",
-      });
+      return sendApiError(
+        request,
+        reply,
+        503,
+        "StorageError",
+        "Local download stub is disabled when R2 is required",
+        "r2_required",
+      );
     }
 
     const q = request.query as { token?: string };
     if (!q.token) {
-      return reply.status(400).send({ error: "Missing token" });
+      return sendApiError(
+        request,
+        reply,
+        400,
+        "ValidationError",
+        "Missing token",
+        "missing_token",
+      );
     }
     const verified = verifyDownloadToken(q.token);
     if (!verified) {
-      return reply.status(403).send({ error: "Invalid or expired download token" });
+      return sendApiError(
+        request,
+        reply,
+        403,
+        "Forbidden",
+        "Invalid or expired download token",
+        "download_token_invalid",
+      );
     }
 
     // Local/dev fallback: return a small text stand-in for the ebook.
@@ -236,45 +301,59 @@ export async function storeRoutes(app: FastifyInstance) {
   });
 
   app.post("/payments/webhooks/paystack", async (request, reply) => {
-    const raw =
-      typeof request.body === "string"
-        ? request.body
-        : JSON.stringify(request.body ?? {});
+    const raw = request.rawBody ?? "";
     const signature = request.headers["x-paystack-signature"];
-    if (!verifyPaystackSignature(raw, Array.isArray(signature) ? signature[0] : signature)) {
-      return reply.status(401).send({ error: "Invalid Paystack signature" });
+    if (
+      !verifyPaystackSignature(
+        raw,
+        Array.isArray(signature) ? signature[0] : signature,
+      )
+    ) {
+      return sendApiError(
+        request,
+        reply,
+        401,
+        "Unauthorized",
+        "Invalid Paystack signature",
+        "webhook_signature_invalid",
+      );
     }
 
     try {
       const result = await handlePaystackEvent(
-        (typeof request.body === "object" && request.body
-          ? request.body
-          : JSON.parse(raw)) as {
+        (request.body ?? {}) as {
           event?: string;
           data?: { reference?: string; status?: string };
         },
       );
       return { ok: true, ...result };
     } catch (error) {
-      return sendStoreError(reply, error);
+      return sendStoreError(request, reply, error);
     }
   });
 
   app.post("/payments/webhooks/stripe", async (request, reply) => {
-    const raw =
-      typeof request.body === "string"
-        ? request.body
-        : JSON.stringify(request.body ?? {});
+    const raw = request.rawBody ?? "";
     const signature = request.headers["stripe-signature"];
-    if (!verifyStripeSignature(raw, Array.isArray(signature) ? signature[0] : signature)) {
-      return reply.status(401).send({ error: "Invalid Stripe signature" });
+    if (
+      !verifyStripeSignature(
+        raw,
+        Array.isArray(signature) ? signature[0] : signature,
+      )
+    ) {
+      return sendApiError(
+        request,
+        reply,
+        401,
+        "Unauthorized",
+        "Invalid Stripe signature",
+        "webhook_signature_invalid",
+      );
     }
 
     try {
       const result = await handleStripeEvent(
-        (typeof request.body === "object" && request.body
-          ? request.body
-          : JSON.parse(raw)) as {
+        (request.body ?? {}) as {
           type?: string;
           data?: {
             object?: {
@@ -286,7 +365,7 @@ export async function storeRoutes(app: FastifyInstance) {
       );
       return { ok: true, ...result };
     } catch (error) {
-      return sendStoreError(reply, error);
+      return sendStoreError(request, reply, error);
     }
   });
 }

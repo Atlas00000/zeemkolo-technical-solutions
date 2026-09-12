@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { redis } from "../config/redis.js";
+import { sendApiError } from "../utils/api-error.js";
 
 type RateLimitOptions = {
   /** Redis key namespace, e.g. "matric-claim" or "consultation-book" */
@@ -43,10 +44,14 @@ export function rateLimit(options: RateLimitOptions) {
       if (count > options.limit) {
         const ttl = await redis.ttl(key);
         reply.header("Retry-After", String(ttl > 0 ? ttl : options.windowSeconds));
-        await reply.status(429).send({
-          error: "RateLimitExceeded",
-          message: "Too many requests. Please try again later.",
-        });
+        await sendApiError(
+          request,
+          reply,
+          429,
+          "RateLimitExceeded",
+          "Too many requests. Please try again later.",
+          "rate_limited",
+        );
       }
     } catch (error) {
       request.log.warn({ err: error }, "rate limiter degraded — allowing request");

@@ -5,6 +5,7 @@ import { env } from "../config/env.js";
 import { prisma } from "../config/db.js";
 import { upsertUserFromClerk } from "../modules/auth/user-sync.service.js";
 import { assignMatricAtSignup } from "../modules/auth/matric.service.js";
+import { sendApiError } from "../utils/api-error.js";
 
 export const clerkClient = createClerkClient({
   secretKey: env.CLERK_SECRET_KEY,
@@ -46,7 +47,7 @@ export async function requireAuth(
 ): Promise<void> {
   const token = getBearerToken(request);
   if (!token) {
-    await reply.status(401).send({ error: "Unauthorized", message: "Missing Bearer token" });
+    await sendApiError(request, reply, 401, "Unauthorized", "Missing Bearer token", "missing_bearer");
     return;
   }
 
@@ -57,7 +58,7 @@ export async function requireAuth(
 
     const clerkUserId = payload.sub;
     if (!clerkUserId) {
-      await reply.status(401).send({ error: "Unauthorized", message: "Invalid token subject" });
+      await sendApiError(request, reply, 401, "Unauthorized", "Invalid token subject", "invalid_subject");
       return;
     }
 
@@ -71,7 +72,7 @@ export async function requireAuth(
 
     request.auth = { clerkUserId, user };
   } catch {
-    await reply.status(401).send({ error: "Unauthorized", message: "Invalid or expired session" });
+    await sendApiError(request, reply, 401, "Unauthorized", "Invalid or expired session", "invalid_session");
     return;
   }
 }
@@ -82,15 +83,20 @@ export function requireRole(roles: Role[]) {
     reply: FastifyReply,
   ): Promise<void> {
     if (!request.auth?.user) {
-      await reply.status(401).send({ error: "Unauthorized" });
+      await sendApiError(request, reply, 401, "Unauthorized", "Authentication required", "unauthenticated");
       return;
     }
 
     if (!roles.includes(request.auth.user.role)) {
-      await reply.status(403).send({
-        error: "Forbidden",
-        message: `Requires one of roles: ${roles.join(", ")}`,
-      });
+      await sendApiError(
+        request,
+        reply,
+        403,
+        "Forbidden",
+        `Requires one of roles: ${roles.join(", ")}`,
+        "forbidden_role",
+      );
+      return;
     }
   };
 }

@@ -143,6 +143,8 @@
 
 ## Phase O4 — API hardening & contracts
 
+**Status: complete (2026-09-12)**
+
 *Backend as system of record; frontend becomes replaceable.*
 
 | Day / slice | Workstream | Deliverable | Acceptance |
@@ -155,9 +157,19 @@
 | O4.6 | Reservation semantics | Document + test PENDING order / slot lock expiry behavior | Single written rule + tests for stock & slots |
 | O4.7 | Webhook readiness | Raw-body signature path ready for future Paystack/Stripe | Documented; still placeholder providers |
 
+**Shipped:**
+- `sendApiError` / global error handler; middleware + controllers use envelope
+- `X-Request-Id` gen/propagate; `request.rawBody` for webhooks
+- Redis `Idempotency-Key` on consultation book + store order create
+- Cursor pagination on admin consultations/orders/forum + public forum threads
+- Live `/openapi.json` + `/docs`; snapshot `docs/api/openapi.json`
+- `docs/runbooks/reservation-semantics.md` + `o4-hardening.test.ts`
+
 ---
 
 ## Phase O5 — Observability & quality gates
+
+**Status: complete (2026-09-12)**
 
 | Day / slice | Workstream | Deliverable | Acceptance |
 | :--- | :--- | :--- | :--- |
@@ -167,6 +179,14 @@
 | O5.4 | Dependency scan | `pnpm audit` / Dependabot on schedule | High vulns triaged |
 | O5.5 | Rate-limit verify | Documented limits + test for 429 on claim/book | Matches `docs/dev-notes/security-hardening.md` |
 | O5.6 | Health split | Liveness vs readiness endpoints | Readiness fails if DB/Redis down |
+
+**Shipped:**
+- Optional Sentry (`SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`); `/debug/sentry` probes; `docs/runbooks/sentry.md`
+- Playwright smoke (`pnpm test:e2e`) + CI job
+- Contract coverage in `o5-observability.test.ts` vs OpenAPI + public GETs + error envelope
+- Dependabot + `docs/dev-notes/dependency-audit.md`; CI audit job
+- Rate-limit docs/tests aligned with security-hardening note
+- `/health/live` + `/health/ready` (503 when not ready); `/health` alias
 
 ---
 
@@ -318,6 +338,10 @@ O4 should start as soon as O0 completes (does not need to wait for all content).
 | `docs/runbooks/admin-bootstrap.md` | Promote Clerk user → ADMIN + MFA checklist |
 | `docs/runbooks/r2-storage.md` | R2 modes, keys, fail-closed / local fallback |
 | `docs/runbooks/content-media.md` | Schematics/videos: public vs R2; authoring checklist |
+| `docs/runbooks/reservation-semantics.md` | Slot locks + PENDING order / stock rules |
+| `docs/runbooks/sentry.md` | Optional Sentry DSNs + test routes |
+| `docs/api/openapi.json` | Published OpenAPI 3.1 snapshot |
+| `docs/dev-notes/dependency-audit.md` | Audit / Dependabot triage policy |
 | `docs/dev-notes/payments-provider-pending.md` | Payment placeholder policy |
 | `docs/dev-notes/qr-redirect-inventory.md` | QR 301 map placeholders |
 | `docs/dev-notes/security-hardening.md` | Rate limits & headers checklist |

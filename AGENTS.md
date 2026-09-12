@@ -28,6 +28,7 @@ On this Windows machine, `docker-compose` (hyphen) is used if `docker compose` i
 | `client/` | Next.js 15 App Router + Clerk UI |
 | `server/` | Fastify + Prisma API |
 | `docs/` | Roadmap companions, ADRs, runbooks, optimization plans |
+| `docs/api/openapi.json` | Published OpenAPI 3.1 snapshot (O4) |
 | `roadmap.md` | Master phases 0–8 |
 | `docs/1st-optimization.md` | Post–Phase-7 optimization track (O0–O7) |
 
@@ -62,6 +63,7 @@ On this Windows machine, `docker-compose` (hyphen) is used if `docker compose` i
 | Typecheck client | `pnpm --filter @zeemkolo/client exec tsc -p tsconfig.json --noEmit` |
 | Phase tests | `pnpm test:phase1` … `pnpm test:phase7` |
 | Full CI-like | `pnpm typecheck` then `pnpm test:ci` (see `package.json`) |
+| E2E smoke | `pnpm test:e2e` (Playwright; needs Chromium) |
 | R2 helpers | `pnpm r2:info` / `r2:ls` / `r2:get` (env keys); `pnpm r2:login` / `r2:buckets` (Wrangler) |
 
 ## Locked decisions (do not reverse casually)
@@ -84,5 +86,5 @@ See `docs/adr/`:
 ## Related docs
 
 - `CONTRIBUTING.md` — PR / test expectations  
-- `docs/runbooks/` — backup/restore, migrations, admin bootstrap, R2 storage, content media
+- `docs/runbooks/` — backup/restore, migrations, admin bootstrap, R2 storage, content media, Sentry
 - `docs/1st-optimization.md` — O0–O7 backlog  

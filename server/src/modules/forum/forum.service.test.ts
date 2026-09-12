@@ -66,7 +66,7 @@ describe("forum.service (Phase 4)", () => {
     expect(thread.id).toBeTruthy();
 
     const threads = await listThreads({ categorySlug: "general" });
-    expect(threads.some((t) => t.id === threadId)).toBe(true);
+    expect(threads.threads.some((t) => t.id === threadId)).toBe(true);
   });
 
   it("creates nested replies and returns a tree", async () => {

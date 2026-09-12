@@ -83,7 +83,7 @@ describe("admin.service (O1)", () => {
     expect(updated.status).toBe("CONFIRMED");
 
     const listed = await listConsultations({ status: ConsultationStatus.CONFIRMED });
-    const row = listed.find((c) => c.id === consultation.id);
+    const row = listed.consultations.find((c) => c.id === consultation.id);
     expect(row?.attachmentKey).toBe("consultations/o1-test.pdf");
 
     await prisma.consultation.delete({ where: { id: consultation.id } });
@@ -104,12 +104,12 @@ describe("admin.service (O1)", () => {
   });
 
   it("locks and unlocks a forum thread when one exists", async () => {
-    const threads = await listForumThreadsAdmin(5);
-    if (threads.length === 0) {
-      expect(threads).toEqual([]);
+    const listed = await listForumThreadsAdmin({ limit: 5 });
+    if (listed.threads.length === 0) {
+      expect(listed.threads).toEqual([]);
       return;
     }
-    const thread = threads[0]!;
+    const thread = listed.threads[0]!;
     const locked = await setForumThreadLocked({
       threadId: thread.id,
       locked: true,

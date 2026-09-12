@@ -1,4 +1,10 @@
 import { prisma } from "../../config/db.js";
+import {
+  createdAtDescCursorWhere,
+  decodeCursor,
+  pageResult,
+  parseLimit,
+} from "../../utils/pagination.js";
 
 export class ForumError extends Error {
   constructor(
@@ -35,12 +41,24 @@ export async function listCategories() {
   }));
 }
 
-export async function listThreads(input?: { categorySlug?: string }) {
+export async function listThreads(input?: {
+  categorySlug?: string;
+  limit?: number;
+  cursor?: string;
+}) {
+  const limit = parseLimit(
+    input?.limit !== undefined ? String(input.limit) : undefined,
+  );
+  const cursor = decodeCursor(input?.cursor);
   const threads = await prisma.forumThread.findMany({
-    where: input?.categorySlug
-      ? { category: { slug: input.categorySlug } }
-      : undefined,
-    orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+    where: {
+      ...(input?.categorySlug
+        ? { category: { slug: input.categorySlug } }
+        : {}),
+      ...(cursor ? createdAtDescCursorWhere(cursor) : {}),
+    },
+    orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
     include: {
       author: { select: { id: true, fullName: true, email: true } },
       category: { select: { id: true, slug: true, title: true } },
@@ -49,19 +67,25 @@ export async function listThreads(input?: { categorySlug?: string }) {
     },
   });
 
-  return threads.map((t) => ({
-    id: t.id,
-    title: t.title,
-    bodyPreview: t.body.length > 160 ? `${t.body.slice(0, 160).trimEnd()}…` : t.body,
-    isPinned: t.isPinned,
-    isLocked: t.isLocked,
-    createdAt: t.createdAt.toISOString(),
-    updatedAt: t.updatedAt.toISOString(),
-    author: authorDto(t.author),
-    category: t.category,
-    replyCount: t._count.replies,
-    score: t.votes.reduce((sum, v) => sum + v.value, 0),
-  }));
+  const page = pageResult(threads, limit);
+  return {
+    threads: page.items.map((t) => ({
+      id: t.id,
+      title: t.title,
+      bodyPreview:
+        t.body.length > 160 ? `${t.body.slice(0, 160).trimEnd()}…` : t.body,
+      isPinned: t.isPinned,
+      isLocked: t.isLocked,
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+      author: authorDto(t.author),
+      category: t.category,
+      replyCount: t._count.replies,
+      score: t.votes.reduce((sum, v) => sum + v.value, 0),
+    })),
+    nextCursor: page.nextCursor,
+    limit: page.limit,
+  };
 }
 
 type ReplyNode = {

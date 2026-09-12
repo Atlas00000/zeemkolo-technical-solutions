@@ -3,6 +3,7 @@ import { z } from "zod";
 import { optionalAuth } from "../../middleware/optional-auth.middleware.js";
 import { requireAuth } from "../../middleware/clerk-auth.middleware.js";
 import { requireStudent } from "../../middleware/rbac.middleware.js";
+import { sendApiError } from "../../utils/api-error.js";
 import {
   ForumError,
   createReply,
@@ -34,12 +35,19 @@ const voteSchema = z
     message: "Provide exactly one of threadId or replyId",
   });
 
-function sendForumError(reply: import("fastify").FastifyReply, error: unknown) {
+function sendForumError(
+  request: import("fastify").FastifyRequest,
+  reply: import("fastify").FastifyReply,
+  error: unknown,
+) {
   if (error instanceof ForumError) {
-    return reply.status(error.statusCode).send({
-      error: "ForumError",
-      message: error.message,
-    });
+    return sendApiError(
+      request,
+      reply,
+      error.statusCode,
+      "ForumError",
+      error.message,
+    );
   }
   throw error;
 }
@@ -51,11 +59,16 @@ export async function forumRoutes(app: FastifyInstance) {
   });
 
   app.get("/forum/threads", async (request) => {
-    const query = request.query as { category?: string };
-    const threads = await listThreads({
+    const query = request.query as {
+      category?: string;
+      limit?: string;
+      cursor?: string;
+    };
+    return listThreads({
       categorySlug: query.category || undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+      cursor: query.cursor,
     });
-    return { threads };
   });
 
   app.get(
@@ -70,7 +83,7 @@ export async function forumRoutes(app: FastifyInstance) {
         });
         return thread;
       } catch (error) {
-        return sendForumError(reply, error);
+        return sendForumError(request, reply, error);
       }
     },
   );
@@ -81,10 +94,7 @@ export async function forumRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const parsed = createThreadSchema.safeParse(request.body);
       if (!parsed.success) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: parsed.error.flatten(),
-        });
+        return sendApiError(request, reply, 400, "ValidationError", JSON.stringify(parsed.error.flatten()), "validation_failed");
       }
 
       try {
@@ -94,7 +104,7 @@ export async function forumRoutes(app: FastifyInstance) {
         });
         return reply.status(201).send(thread);
       } catch (error) {
-        return sendForumError(reply, error);
+        return sendForumError(request, reply, error);
       }
     },
   );
@@ -106,10 +116,7 @@ export async function forumRoutes(app: FastifyInstance) {
       const { threadId } = request.params as { threadId: string };
       const parsed = createReplySchema.safeParse(request.body);
       if (!parsed.success) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: parsed.error.flatten(),
-        });
+        return sendApiError(request, reply, 400, "ValidationError", JSON.stringify(parsed.error.flatten()), "validation_failed");
       }
 
       try {
@@ -121,7 +128,7 @@ export async function forumRoutes(app: FastifyInstance) {
         });
         return reply.status(201).send(created);
       } catch (error) {
-        return sendForumError(reply, error);
+        return sendForumError(request, reply, error);
       }
     },
   );
@@ -132,10 +139,7 @@ export async function forumRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const parsed = voteSchema.safeParse(request.body);
       if (!parsed.success) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: parsed.error.flatten(),
-        });
+        return sendApiError(request, reply, 400, "ValidationError", JSON.stringify(parsed.error.flatten()), "validation_failed");
       }
 
       try {
@@ -147,7 +151,7 @@ export async function forumRoutes(app: FastifyInstance) {
         });
         return result;
       } catch (error) {
-        return sendForumError(reply, error);
+        return sendForumError(request, reply, error);
       }
     },
   );

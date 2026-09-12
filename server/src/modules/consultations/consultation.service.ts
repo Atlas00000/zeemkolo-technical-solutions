@@ -24,6 +24,8 @@ export class ConsultationError extends Error {
 }
 
 const SLOT_LOCK_TTL_SECONDS = 120;
+
+export { SLOT_LOCK_TTL_SECONDS };
 const WORKDAY_START_HOUR = 9;
 const WORKDAY_END_HOUR = 17;
 

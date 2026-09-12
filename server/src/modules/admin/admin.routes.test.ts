@@ -93,6 +93,7 @@ describe("admin routes + hardening (Phase 7)", () => {
       const reply = fakeReply();
       await guard(
         {
+          id: "req-admin-rl",
           ip: "127.0.0.1",
           auth: undefined,
           headers: {},
@@ -106,6 +107,7 @@ describe("admin routes + hardening (Phase 7)", () => {
     const blocked = fakeReply();
     await guard(
       {
+        id: "req-admin-rl",
         ip: "127.0.0.1",
         auth: undefined,
         headers: {},
@@ -114,6 +116,7 @@ describe("admin routes + hardening (Phase 7)", () => {
       blocked as never,
     );
     expect(blocked.statusCode).toBe(429);
+    expect((blocked.body as { code?: string })?.code).toBe("rate_limited");
 
     const keys = await redis.keys(`rl:${key}:*`);
     if (keys.length) await redis.del(...keys);

@@ -1,5 +1,11 @@
 import { ConsultationStatus, OrderStatus, Role, type Prisma } from "@prisma/client";
 import { prisma } from "../../config/db.js";
+import {
+  createdAtDescCursorWhere,
+  decodeCursor,
+  pageResult,
+  parseLimit,
+} from "../../utils/pagination.js";
 
 export class AdminError extends Error {
   constructor(
@@ -194,25 +200,41 @@ export async function revokeMatric(matricId: string) {
   };
 }
 
-export async function listConsultations(input?: { status?: ConsultationStatus }) {
+export async function listConsultations(input?: {
+  status?: ConsultationStatus;
+  limit?: number;
+  cursor?: string;
+}) {
+  const limit = parseLimit(
+    input?.limit !== undefined ? String(input.limit) : undefined,
+  );
+  const cursor = decodeCursor(input?.cursor);
   const rows = await prisma.consultation.findMany({
-    where: input?.status ? { status: input.status } : undefined,
-    orderBy: { createdAt: "desc" },
-    take: 100,
+    where: {
+      ...(input?.status ? { status: input.status } : {}),
+      ...(cursor ? createdAtDescCursorWhere(cursor) : {}),
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
   });
 
-  return rows.map((c) => ({
-    id: c.id,
-    guestName: c.guestName,
-    guestEmail: c.guestEmail,
-    serviceType: c.serviceType,
-    projectBrief: c.projectBrief,
-    attachmentKey: c.attachmentKey,
-    slotStartsAt: c.slotStartsAt.toISOString(),
-    timezone: c.timezone,
-    status: c.status,
-    createdAt: c.createdAt.toISOString(),
-  }));
+  const page = pageResult(rows, limit);
+  return {
+    consultations: page.items.map((c) => ({
+      id: c.id,
+      guestName: c.guestName,
+      guestEmail: c.guestEmail,
+      serviceType: c.serviceType,
+      projectBrief: c.projectBrief,
+      attachmentKey: c.attachmentKey,
+      slotStartsAt: c.slotStartsAt.toISOString(),
+      timezone: c.timezone,
+      status: c.status,
+      createdAt: c.createdAt.toISOString(),
+    })),
+    nextCursor: page.nextCursor,
+    limit: page.limit,
+  };
 }
 
 export async function updateConsultationStatus(input: {
@@ -237,11 +259,22 @@ export async function updateConsultationStatus(input: {
   };
 }
 
-export async function listOrders(input?: { status?: OrderStatus }) {
+export async function listOrders(input?: {
+  status?: OrderStatus;
+  limit?: number;
+  cursor?: string;
+}) {
+  const limit = parseLimit(
+    input?.limit !== undefined ? String(input.limit) : undefined,
+  );
+  const cursor = decodeCursor(input?.cursor);
   const orders = await prisma.order.findMany({
-    where: input?.status ? { status: input.status } : undefined,
-    orderBy: { createdAt: "desc" },
-    take: 100,
+    where: {
+      ...(input?.status ? { status: input.status } : {}),
+      ...(cursor ? createdAtDescCursorWhere(cursor) : {}),
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
     include: {
       items: {
         include: {
@@ -251,21 +284,26 @@ export async function listOrders(input?: { status?: OrderStatus }) {
     },
   });
 
-  return orders.map((o) => ({
-    id: o.id,
-    email: o.email,
-    status: o.status,
-    currency: o.currency,
-    totalAmount: o.totalAmount,
-    paymentProvider: o.paymentProvider,
-    paymentRef: o.paymentRef,
-    createdAt: o.createdAt.toISOString(),
-    items: o.items.map((i) => ({
-      quantity: i.quantity,
-      unitPrice: i.unitPrice,
-      product: i.product,
+  const page = pageResult(orders, limit);
+  return {
+    orders: page.items.map((o) => ({
+      id: o.id,
+      email: o.email,
+      status: o.status,
+      currency: o.currency,
+      totalAmount: o.totalAmount,
+      paymentProvider: o.paymentProvider,
+      paymentRef: o.paymentRef,
+      createdAt: o.createdAt.toISOString(),
+      items: o.items.map((i) => ({
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        product: i.product,
+      })),
     })),
-  }));
+    nextCursor: page.nextCursor,
+    limit: page.limit,
+  };
 }
 
 export async function updateProduct(input: {
@@ -544,10 +582,18 @@ export async function upsertLesson(input: {
   });
 }
 
-export async function listForumThreadsAdmin(limit = 50) {
+export async function listForumThreadsAdmin(input?: {
+  limit?: number;
+  cursor?: string;
+}) {
+  const limit = parseLimit(
+    input?.limit !== undefined ? String(input.limit) : undefined,
+  );
+  const cursor = decodeCursor(input?.cursor);
   const threads = await prisma.forumThread.findMany({
-    orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
-    take: Math.min(limit, 100),
+    where: cursor ? createdAtDescCursorWhere(cursor) : undefined,
+    orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
     include: {
       author: { select: { id: true, fullName: true, email: true } },
       category: { select: { slug: true, title: true } },
@@ -555,16 +601,21 @@ export async function listForumThreadsAdmin(limit = 50) {
     },
   });
 
-  return threads.map((t) => ({
-    id: t.id,
-    title: t.title,
-    isLocked: t.isLocked,
-    isPinned: t.isPinned,
-    replyCount: t._count.replies,
-    createdAt: t.createdAt.toISOString(),
-    author: t.author,
-    category: t.category,
-  }));
+  const page = pageResult(threads, limit);
+  return {
+    threads: page.items.map((t) => ({
+      id: t.id,
+      title: t.title,
+      isLocked: t.isLocked,
+      isPinned: t.isPinned,
+      replyCount: t._count.replies,
+      createdAt: t.createdAt.toISOString(),
+      author: t.author,
+      category: t.category,
+    })),
+    nextCursor: page.nextCursor,
+    limit: page.limit,
+  };
 }
 
 export async function setForumThreadLocked(input: {

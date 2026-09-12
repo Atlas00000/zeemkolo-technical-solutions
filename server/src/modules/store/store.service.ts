@@ -15,6 +15,8 @@ export class StoreError extends Error {
 
 const RESERVE_TTL_SECONDS = 15 * 60;
 
+export { RESERVE_TTL_SECONDS };
+
 export function formatMoney(amountMinor: number, currency: Currency) {
   if (currency === Currency.NGN) {
     return {
@@ -101,6 +103,9 @@ export async function createOrder(input: {
   userId?: string;
   paymentProvider: "paystack" | "stripe";
 }) {
+  // Opportunistic cleanup of PENDING orders past reservation window.
+  await sweepExpiredPendingOrders(25);
+
   if (!input.items.length) {
     throw new StoreError("Cart is empty", 400);
   }
@@ -344,4 +349,31 @@ export async function releaseExpiredReservation(orderId: string) {
   });
 
   await redis.del(`store:reserve:${orderId}`);
+}
+
+/**
+ * Cancel PENDING orders whose Redis reservation key has expired
+ * (or that are older than RESERVE_TTL_SECONDS).
+ * Stock was never decremented at create — only confirmed PAID orders consume stock.
+ */
+export async function sweepExpiredPendingOrders(limit = 50) {
+  const cutoff = new Date(Date.now() - RESERVE_TTL_SECONDS * 1000);
+  const candidates = await prisma.order.findMany({
+    where: {
+      status: OrderStatus.PENDING,
+      createdAt: { lt: cutoff },
+    },
+    take: limit,
+    select: { id: true },
+  });
+
+  let released = 0;
+  for (const row of candidates) {
+    const alive = await redis.exists(`store:reserve:${row.id}`);
+    if (!alive) {
+      await releaseExpiredReservation(row.id);
+      released += 1;
+    }
+  }
+  return { scanned: candidates.length, released };
 }

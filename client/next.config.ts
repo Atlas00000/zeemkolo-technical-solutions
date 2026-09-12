@@ -19,7 +19,6 @@ const qrRedirects: { source: string; destination: string }[] = [
   { source: "/qr/shop", destination: "/store" },
   { source: "/qr/kit", destination: "/store" },
   { source: "/qr/forum", destination: "/forum" },
-  // Legacy Canva-style marketing paths (placeholders until inventory confirmed)
   { source: "/canva", destination: "/" },
   { source: "/canva/:path*", destination: "/" },
   { source: "/home", destination: "/" },
@@ -34,7 +33,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return qrRedirects.map((rule) => ({
       ...rule,
-      permanent: true, // HTTP 301
+      permanent: true,
     }));
   },
   async headers() {
@@ -50,4 +49,6 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Sentry: use instrumentation*.ts + optional DSN (no withSentryConfig webpack plugin —
+// the plugin's clientTraceMetadata/tunnel interfered with local next dev).
 export default nextConfig;

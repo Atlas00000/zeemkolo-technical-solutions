@@ -26,7 +26,6 @@ jobs:
       - name: Server typecheck (lint)
         run: pnpm --filter @zeemkolo/server lint
         env:
-          # Prisma/env modules may load at import; provide harmless placeholders
           CLERK_SECRET_KEY: sk_test_ci_placeholder
           CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
           DATABASE_URL: postgresql://zeemkolo_admin:zeemkolo_secret_password@localhost:5432/zeemkolo_db?schema=public
@@ -36,6 +35,27 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: http://localhost:5000
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+
+  audit:
+    name: Dependency audit (high+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: pnpm audit
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+      - name: Record triage pointer
+        run: |
+          echo "See docs/dev-notes/dependency-audit.md for triage policy."
+          echo "Job continues on findings so Dependabot/manual PRs can land; treat new highs as blocking for release."
 
   test:
     name: Vitest (server modules)
@@ -88,4 +108,31 @@ jobs:
           pnpm exec prisma db seed
       - name: Run server Vitest suites
         working-directory: server
-        run: pnpm exec vitest run src/modules
+        run: pnpm exec vitest run src/modules src/utils
+      - name: OpenAPI snapshot in sync
+        working-directory: server
+        run: |
+          pnpm openapi:export
+          git diff --exit-code ../docs/api/openapi.json
+
+  e2e:
+    name: Playwright smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: E2E smoke
+        run: pnpm test:e2e
+        env:
+          CI: true
+          NEXT_PUBLIC_API_URL: http://localhost:5000
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsucGxhY2Vob2xkZXIuZGV2JA

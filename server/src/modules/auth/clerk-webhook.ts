@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { Webhook } from "svix";
 import { env } from "../../config/env.js";
 import { clerkClient } from "../../middleware/clerk-auth.middleware.js";
+import { sendApiError } from "../../utils/api-error.js";
 import { upsertUserFromClerk } from "./user-sync.service.js";
 
 type ClerkWebhookEvent = {
@@ -14,10 +15,14 @@ export async function handleClerkWebhook(
   reply: FastifyReply,
 ) {
   if (!env.CLERK_WEBHOOK_SECRET) {
-    return reply.status(503).send({
-      error: "WebhookNotConfigured",
-      message: "CLERK_WEBHOOK_SECRET is not set",
-    });
+    return sendApiError(
+      request,
+      reply,
+      503,
+      "WebhookNotConfigured",
+      "CLERK_WEBHOOK_SECRET is not set",
+      "webhook_not_configured",
+    );
   }
 
   const svixId = request.headers["svix-id"];
@@ -29,12 +34,17 @@ export async function handleClerkWebhook(
     typeof svixTimestamp !== "string" ||
     typeof svixSignature !== "string"
   ) {
-    return reply.status(400).send({ error: "MissingSvixHeaders" });
+    return sendApiError(
+      request,
+      reply,
+      400,
+      "MissingSvixHeaders",
+      "Missing Svix signature headers",
+      "missing_svix_headers",
+    );
   }
 
-  const payload = typeof request.body === "string"
-    ? request.body
-    : JSON.stringify(request.body);
+  const payload = request.rawBody ?? JSON.stringify(request.body ?? {});
 
   let event: ClerkWebhookEvent;
   try {
@@ -45,7 +55,14 @@ export async function handleClerkWebhook(
       "svix-signature": svixSignature,
     }) as ClerkWebhookEvent;
   } catch {
-    return reply.status(400).send({ error: "InvalidWebhookSignature" });
+    return sendApiError(
+      request,
+      reply,
+      400,
+      "InvalidWebhookSignature",
+      "Invalid Clerk webhook signature",
+      "webhook_signature_invalid",
+    );
   }
 
   if (event.type === "user.created" || event.type === "user.updated") {

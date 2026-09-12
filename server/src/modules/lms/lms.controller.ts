@@ -3,6 +3,7 @@ import { z } from "zod";
 import { optionalAuth } from "../../middleware/optional-auth.middleware.js";
 import { requireAuth } from "../../middleware/clerk-auth.middleware.js";
 import { requireStudent } from "../../middleware/rbac.middleware.js";
+import { sendApiError } from "../../utils/api-error.js";
 import {
   LmsError,
   getCourseBySlug,
@@ -17,6 +18,23 @@ const progressBodySchema = z.object({
   completed: z.boolean(),
 });
 
+function sendLmsError(
+  request: import("fastify").FastifyRequest,
+  reply: import("fastify").FastifyReply,
+  error: unknown,
+) {
+  if (error instanceof LmsError) {
+    return sendApiError(
+      request,
+      reply,
+      error.statusCode,
+      "LmsError",
+      error.message,
+    );
+  }
+  throw error;
+}
+
 export async function lmsRoutes(app: FastifyInstance) {
   app.get("/lms/courses", async () => {
     const courses = await listPublishedCourses();
@@ -29,13 +47,7 @@ export async function lmsRoutes(app: FastifyInstance) {
       const course = await getCourseBySlug(courseSlug);
       return course;
     } catch (error) {
-      if (error instanceof LmsError) {
-        return reply.status(error.statusCode).send({
-          error: "LmsError",
-          message: error.message,
-        });
-      }
-      throw error;
+      return sendLmsError(request, reply, error);
     }
   });
 
@@ -56,13 +68,7 @@ export async function lmsRoutes(app: FastifyInstance) {
         });
         return lesson;
       } catch (error) {
-        if (error instanceof LmsError) {
-          return reply.status(error.statusCode).send({
-            error: "LmsError",
-            message: error.message,
-          });
-        }
-        throw error;
+        return sendLmsError(request, reply, error);
       }
     },
   );
@@ -78,13 +84,7 @@ export async function lmsRoutes(app: FastifyInstance) {
           courseSlug,
         });
       } catch (error) {
-        if (error instanceof LmsError) {
-          return reply.status(error.statusCode).send({
-            error: "LmsError",
-            message: error.message,
-          });
-        }
-        throw error;
+        return sendLmsError(request, reply, error);
       }
     },
   );
@@ -95,10 +95,7 @@ export async function lmsRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const parsed = progressBodySchema.safeParse(request.body);
       if (!parsed.success) {
-        return reply.status(400).send({
-          error: "ValidationError",
-          message: parsed.error.flatten(),
-        });
+        return sendApiError(request, reply, 400, "ValidationError", JSON.stringify(parsed.error.flatten()), "validation_failed");
       }
 
       try {
@@ -113,13 +110,7 @@ export async function lmsRoutes(app: FastifyInstance) {
           completedAt: progress.completedAt,
         };
       } catch (error) {
-        if (error instanceof LmsError) {
-          return reply.status(error.statusCode).send({
-            error: "LmsError",
-            message: error.message,
-          });
-        }
-        throw error;
+        return sendLmsError(request, reply, error);
       }
     },
   );
