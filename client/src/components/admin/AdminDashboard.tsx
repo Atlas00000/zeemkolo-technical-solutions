@@ -23,6 +23,18 @@ import {
   AdminLmsCms,
   AdminStoreCms,
 } from "@/components/admin/AdminContentCms";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const SECTIONS = [
   { id: "overview", label: "Overview" },
@@ -157,29 +169,31 @@ export function AdminDashboard() {
     <div className="space-y-8">
       {error ? <p className="text-brand-signal">{error}</p> : null}
 
-      <nav
-        className="flex flex-wrap gap-2 border-b border-brand-steel/15 pb-3"
-        aria-label="Admin sections"
+      <Tabs
+        value={section}
+        onValueChange={(value) => setSection(value as SectionId)}
+        className="gap-4"
       >
-        {SECTIONS.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => setSection(s.id)}
-            className={
-              section === s.id
-                ? "bg-brand-ink px-3 py-1.5 text-sm text-white"
-                : "border border-brand-steel/20 px-3 py-1.5 text-sm text-brand-steel hover:border-brand-ink/40 hover:text-brand-ink"
-            }
-          >
-            {s.label}
-          </button>
-        ))}
-      </nav>
+        <TabsList
+          variant="line"
+          className="h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0"
+          aria-label="Admin sections"
+        >
+          {SECTIONS.map((s) => (
+            <TabsTrigger
+              key={s.id}
+              value={s.id}
+              className="rounded-none border border-transparent px-3 py-1.5 data-[state=active]:border-foreground data-[state=active]:bg-foreground data-[state=active]:text-background"
+            >
+              {s.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {section === "overview" && overview ? (
         <section className="space-y-4">
-          <h2 className="font-display text-2xl text-brand-ink">Overview</h2>
+          <h2 className="font-display text-2xl text-foreground">Overview</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(
               [
@@ -191,18 +205,19 @@ export function AdminDashboard() {
                 ["Locked threads", overview.lockedThreads],
               ] as const
             ).map(([label, value]) => (
-              <div
-                key={label}
-                className="border border-brand-steel/15 bg-white/50 px-4 py-5"
-              >
-                <p className="text-xs tracking-wide text-brand-steel uppercase">
-                  {label}
-                </p>
-                <p className="mt-2 font-display text-3xl text-brand-ink">{value}</p>
-              </div>
+              <Card key={label} className="rounded-md shadow-none">
+                <CardContent className="px-4 py-5">
+                  <p className="text-xs tracking-wide text-muted-foreground uppercase">
+                    {label}
+                  </p>
+                  <p className="mt-2 font-display text-3xl text-foreground">
+                    {value}
+                  </p>
+                </CardContent>
+              </Card>
             ))}
           </div>
-          <p className="text-sm text-brand-steel">
+          <p className="text-sm text-muted-foreground">
             Signed in as {me.email} · role {me.role}
           </p>
         </section>
@@ -211,77 +226,88 @@ export function AdminDashboard() {
       {section === "matrics" ? (
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-2xl text-brand-ink">Matric numbers</h2>
+            <h2 className="font-display text-2xl text-foreground">Matric numbers</h2>
             <MatricGeneratorModal token={token} onGenerated={() => void load()} />
           </div>
           <div className="flex flex-wrap gap-2">
             {(["all", "unclaimed", "claimed"] as const).map((f) => (
-              <button
+              <Button
                 key={f}
                 type="button"
+                size="sm"
+                variant={matricFilter === f ? "default" : "outline"}
                 onClick={() => setMatricFilter(f)}
-                className={
-                  matricFilter === f
-                    ? "bg-brand-signal px-3 py-1 text-sm text-white"
-                    : "border border-brand-steel/20 px-3 py-1 text-sm"
-                }
               >
                 {f}
-              </button>
+              </Button>
             ))}
           </div>
-          <ul className="max-h-[28rem] space-y-2 overflow-y-auto text-sm">
-            {matrics.length === 0 ? (
-              <li className="text-brand-steel">No matrics in this filter.</li>
-            ) : (
-              matrics.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex flex-wrap items-center justify-between gap-2 border-t border-brand-steel/10 pt-2"
-                >
-                  <div>
-                    <span className="font-mono text-brand-ink">{m.code}</span>
-                    <span className="ml-2 text-brand-steel/70">
-                      {m.claimed
-                        ? `claimed · ${m.user?.email ?? "user"}`
-                        : "unclaimed"}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className="text-brand-signal underline-offset-2 hover:underline"
-                    onClick={() => {
-                      if (
-                        !window.confirm(
-                          m.claimed
-                            ? `Release ${m.code} and demote student?`
-                            : `Delete unused matric ${m.code}?`,
-                        )
-                      ) {
-                        return;
-                      }
-                      void (async () => {
-                        await adminRevokeMatric(m.id, token);
-                        await load();
-                      })();
-                    }}
-                  >
-                    {m.claimed ? "Release" : "Delete"}
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
+          <div className="max-h-[28rem] overflow-auto rounded-md border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {matrics.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-muted-foreground">
+                      No matrics in this filter.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  matrics.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell className="font-mono">{m.code}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {m.claimed
+                          ? `claimed · ${m.user?.email ?? "user"}`
+                          : "unclaimed"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="text-primary"
+                          onClick={() => {
+                            if (
+                              !window.confirm(
+                                m.claimed
+                                  ? `Release ${m.code} and demote student?`
+                                  : `Delete unused matric ${m.code}?`,
+                              )
+                            ) {
+                              return;
+                            }
+                            void (async () => {
+                              await adminRevokeMatric(m.id, token);
+                              await load();
+                            })();
+                          }}
+                        >
+                          {m.claimed ? "Release" : "Delete"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </section>
       ) : null}
 
       {section === "consultations" ? (
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-2xl text-brand-ink">Consultations</h2>
+            <h2 className="font-display text-2xl text-foreground">Consultations</h2>
             <select
               value={consultationFilter}
-              className="border border-brand-steel/25 bg-white px-2 py-1 text-sm"
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
               onChange={(e) => setConsultationFilter(e.target.value)}
             >
               <option value="">All statuses</option>
@@ -292,75 +318,99 @@ export function AdminDashboard() {
               ))}
             </select>
           </div>
-          <ul className="space-y-4">
-            {consultations.length === 0 ? (
-              <li className="text-sm text-brand-steel">No consultations yet.</li>
-            ) : (
-              consultations.map((c) => (
-                <li key={c.id} className="border-t border-brand-steel/15 pt-4">
-                  <p className="font-medium text-brand-ink">
-                    {c.guestName} · {c.serviceType}
-                  </p>
-                  <p className="text-sm text-brand-steel/70">
-                    {c.guestEmail} · {new Date(c.slotStartsAt).toLocaleString()} ·{" "}
-                    {c.status}
-                  </p>
-                  {c.attachmentKey ? (
-                    <p className="mt-1 font-mono text-xs text-brand-steel">
-                      attachment: {c.attachmentKey}
-                    </p>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="mt-2 text-sm text-brand-signal underline-offset-2 hover:underline"
-                    onClick={() =>
-                      setExpandedBrief((id) => (id === c.id ? null : c.id))
-                    }
-                  >
-                    {expandedBrief === c.id ? "Hide brief" : "View brief"}
-                  </button>
-                  {expandedBrief === c.id ? (
-                    <p className="mt-2 whitespace-pre-wrap border border-brand-steel/15 bg-white/60 p-3 text-sm text-brand-ink">
-                      {c.projectBrief}
-                    </p>
-                  ) : null}
-                  <label className="mt-2 inline-flex items-center gap-2 text-sm text-brand-steel">
-                    Status
-                    <select
-                      value={c.status}
-                      className="border border-brand-steel/25 bg-white px-2 py-1"
-                      onChange={(e) => {
-                        void (async () => {
-                          await adminUpdateConsultationStatus(
-                            c.id,
-                            e.target.value,
-                            token,
-                          );
-                          await load();
-                        })();
-                      }}
-                    >
-                      {CONSULTATION_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </li>
-              ))
-            )}
-          </ul>
+          <div className="max-h-[32rem] overflow-auto rounded-md border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Guest</TableHead>
+                  <TableHead>Slot</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {consultations.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-muted-foreground">
+                      No consultations yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  consultations.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>
+                        <p className="font-medium">
+                          {c.guestName} · {c.serviceType}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {c.guestEmail}
+                        </p>
+                        {expandedBrief === c.id ? (
+                          <p className="mt-2 max-w-md whitespace-pre-wrap rounded-md border border-border bg-muted/40 p-2 text-xs">
+                            {c.projectBrief}
+                          </p>
+                        ) : null}
+                        {c.attachmentKey ? (
+                          <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                            {c.attachmentKey}
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(c.slotStartsAt).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <select
+                          value={c.status}
+                          className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                          aria-label={`Status for ${c.guestName}`}
+                          onChange={(e) => {
+                            void (async () => {
+                              await adminUpdateConsultationStatus(
+                                c.id,
+                                e.target.value,
+                                token,
+                              );
+                              await load();
+                            })();
+                          }}
+                        >
+                          {CONSULTATION_STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="text-primary"
+                          onClick={() =>
+                            setExpandedBrief((id) => (id === c.id ? null : c.id))
+                          }
+                        >
+                          {expandedBrief === c.id ? "Hide brief" : "View brief"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </section>
       ) : null}
 
       {section === "orders" ? (
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-2xl text-brand-ink">Orders</h2>
+            <h2 className="font-display text-2xl text-foreground">Orders</h2>
             <select
               value={orderFilter}
-              className="border border-brand-steel/25 bg-white px-2 py-1 text-sm"
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
               onChange={(e) => setOrderFilter(e.target.value)}
             >
               <option value="">All statuses</option>
@@ -371,31 +421,52 @@ export function AdminDashboard() {
               ))}
             </select>
           </div>
-          <ul className="space-y-3">
-            {orders.length === 0 ? (
-              <li className="text-sm text-brand-steel">No orders yet.</li>
-            ) : (
-              orders.map((o) => (
-                <li key={o.id} className="border-t border-brand-steel/15 pt-3 text-sm">
-                  <p className="text-brand-ink">
-                    {o.email} · {o.status} · {o.currency}{" "}
-                    {(o.totalAmount / 100).toFixed(2)}
-                  </p>
-                  <p className="text-brand-steel/70">
-                    {o.items
-                      .map((i) => `${i.quantity}× ${i.product.title}`)
-                      .join(", ")}
-                  </p>
-                  {o.paymentRef ? (
-                    <p className="font-mono text-xs text-brand-steel">
-                      ref {o.paymentRef}
-                      {o.paymentProvider ? ` · ${o.paymentProvider}` : ""}
-                    </p>
-                  ) : null}
-                </li>
-              ))
-            )}
-          </ul>
+          <div className="max-h-[32rem] overflow-auto rounded-md border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {orders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-muted-foreground">
+                      No orders yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  orders.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell>
+                        <p>{o.email}</p>
+                        {o.paymentRef ? (
+                          <p className="font-mono text-[10px] text-muted-foreground">
+                            ref {o.paymentRef}
+                            {o.paymentProvider ? ` · ${o.paymentProvider}` : ""}
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="max-w-xs text-muted-foreground">
+                        {o.items
+                          .map((i) => `${i.quantity}× ${i.product.title}`)
+                          .join(", ")}
+                      </TableCell>
+                      <TableCell>
+                        {o.currency} {(o.totalAmount / 100).toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{o.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </section>
       ) : null}
 
@@ -409,64 +480,107 @@ export function AdminDashboard() {
 
       {section === "forum" ? (
         <section className="space-y-4">
-          <h2 className="font-display text-2xl text-brand-ink">Forum threads</h2>
-          <ul className="space-y-3">
-            {threads.length === 0 ? (
-              <li className="text-sm text-brand-steel">No threads yet.</li>
-            ) : (
-              threads.map((t) => (
-                <li
-                  key={t.id}
-                  className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-steel/15 pt-3 text-sm"
-                >
-                  <div>
-                    <p className="text-brand-ink">{t.title}</p>
-                    <p className="text-brand-steel/70">
-                      {t.category.title} · {t.replyCount} replies ·{" "}
-                      {t.isLocked ? "locked" : "open"}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="border border-brand-steel/25 px-3 py-1"
-                    onClick={() => {
-                      void (async () => {
-                        await adminSetForumThreadLocked(t.id, !t.isLocked, token);
-                        await load();
-                      })();
-                    }}
-                  >
-                    {t.isLocked ? "Unlock" : "Lock"}
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
+          <h2 className="font-display text-2xl text-foreground">Forum threads</h2>
+          <div className="max-h-[32rem] overflow-auto rounded-md border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Thread</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>State</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {threads.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-muted-foreground">
+                      No threads yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  threads.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell>
+                        <p className="font-medium">{t.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.replyCount} replies
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {t.category.title}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={t.isLocked ? "destructive" : "secondary"}>
+                          {t.isLocked ? "locked" : "open"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            void (async () => {
+                              await adminSetForumThreadLocked(
+                                t.id,
+                                !t.isLocked,
+                                token,
+                              );
+                              await load();
+                            })();
+                          }}
+                        >
+                          {t.isLocked ? "Unlock" : "Lock"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </section>
       ) : null}
 
       {section === "audit" ? (
         <section className="space-y-4">
-          <h2 className="font-display text-2xl text-brand-ink">Audit log</h2>
-          <ul className="max-h-[32rem] space-y-2 overflow-y-auto text-sm">
-            {audit.length === 0 ? (
-              <li className="text-brand-steel">No admin actions recorded yet.</li>
-            ) : (
-              audit.map((e) => (
-                <li key={e.id} className="border-t border-brand-steel/10 pt-2">
-                  <p className="text-brand-ink">
-                    <span className="font-mono text-xs">{e.action}</span>
-                    {" · "}
-                    {e.targetType}
-                    {e.targetId ? `/${e.targetId.slice(0, 8)}…` : ""}
-                  </p>
-                  <p className="text-brand-steel/70">
-                    {e.actor.email} · {new Date(e.createdAt).toLocaleString()}
-                  </p>
-                </li>
-              ))
-            )}
-          </ul>
+          <h2 className="font-display text-2xl text-foreground">Audit log</h2>
+          <div className="max-h-[32rem] overflow-auto rounded-md border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Target</TableHead>
+                  <TableHead>Actor</TableHead>
+                  <TableHead>When</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {audit.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-muted-foreground">
+                      No admin actions recorded yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  audit.map((e) => (
+                    <TableRow key={e.id}>
+                      <TableCell className="font-mono text-xs">{e.action}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {e.targetType}
+                        {e.targetId ? `/${e.targetId.slice(0, 8)}…` : ""}
+                      </TableCell>
+                      <TableCell>{e.actor.email}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(e.createdAt).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </section>
       ) : null}
     </div>

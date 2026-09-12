@@ -29,7 +29,11 @@ const qrRedirects: { source: string; destination: string }[] = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // `standalone` needs symlink creation; Windows + OneDrive often throws EPERM.
+  // Set NEXT_OUTPUT_STANDALONE=1 on Linux/Docker CI when packaging a self-contained image.
+  ...(process.env.NEXT_OUTPUT_STANDALONE === "1" || process.platform !== "win32"
+    ? { output: "standalone" as const }
+    : {}),
   async redirects() {
     return qrRedirects.map((rule) => ({
       ...rule,

@@ -7,10 +7,6 @@
   --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
 }
 
-body {
-  margin: 0;
-}
-
 @keyframes marketing-fade-up {
   from {
     opacity: 0;
@@ -71,5 +67,58 @@ body {
   .marketing-hero-pan img,
   .marketing-glow {
     animation: none;
+  }
+}
+
+@layer base {
+  .theme {
+    --font-heading: var(--font-display);
+    --font-sans: var(--font-sans);
+  }
+  /* Zeemkolo brand → shadcn tokens (O7.1). Signal orange primary; mist/ink surfaces. */
+  :root {
+    --background: #e8eef2;
+    --foreground: #0f1720;
+    --card: #f4f7f9;
+    --card-foreground: #0f1720;
+    --popover: #f4f7f9;
+    --popover-foreground: #0f1720;
+    --primary: #c45c26;
+    --primary-foreground: #ffffff;
+    --secondary: #1e2a36;
+    --secondary-foreground: #e8eef2;
+    --muted: #dce4ea;
+    --muted-foreground: #1e2a36;
+    --accent: #d5dee6;
+    --accent-foreground: #0f1720;
+    --destructive: #b42318;
+    --border: color-mix(in srgb, #1e2a36 18%, transparent);
+    --input: color-mix(in srgb, #1e2a36 22%, transparent);
+    --ring: #c45c26;
+    --chart-1: #c45c26;
+    --chart-2: #1e2a36;
+    --chart-3: #0f1720;
+    --chart-4: #6b7c8a;
+    --chart-5: #d5dee6;
+    --radius: 0.25rem;
+    --sidebar: #f4f7f9;
+    --sidebar-foreground: #0f1720;
+    --sidebar-primary: #c45c26;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #dce4ea;
+    --sidebar-accent-foreground: #0f1720;
+    --sidebar-border: color-mix(in srgb, #1e2a36 18%, transparent);
+    --sidebar-ring: #c45c26;
+  }
+  * {
+    @apply border-border;
+    outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+  }
+  html {
+    @apply font-sans;
   }
 }

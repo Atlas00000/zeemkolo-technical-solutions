@@ -15,7 +15,7 @@
 | **R2 object storage** | Included in this optimization track (next implementation work) |
 | **Admin access + custom admin panel** | Included in this optimization track |
 | **Production content** | Included in this optimization track |
-| **shadcn/ui frontend revamp** | **Deferred** until backend is operationally solid; then frontend hugs the API contract |
+| **shadcn/ui frontend revamp** | **Complete (O7)** — design system hugs OpenAPI; brand tokens preserved |
 
 ---
 
@@ -40,7 +40,7 @@
 | **O4** | API hardening & contracts | P0 | O0 | OpenAPI published; idempotency; uniform errors; pagination on hot lists |
 | **O5** | Observability & quality gates | P1 | O0–O4 (partial OK) | Sentry + CI + critical E2E smokes; audit log for admin mutations |
 | **O6** | Product polish (pre-revamp) | P2 | O1–O4 | Shared shell, a11y/SEO basics, reservation semantics documented & tested |
-| **O7** | Frontend revamp (shadcn) | P2 | O3–O5 backend solid | New UI hugs OpenAPI; **not** started until backend sign-off |
+| **O7** | Frontend revamp (shadcn) | P2 | O3–O5 backend solid | **Complete** — shadcn kit + OpenAPI types; smoke e2e green |
 | **—** | Phase 8 — Production launch | P1 | Explicit sign-off | Out of scope until owner unlocks |
 
 ---
@@ -192,6 +192,8 @@
 
 ## Phase O6 — Product polish (pre–shadcn)
 
+**Status: complete (2026-09-12)**
+
 *Improve UX without a full design-system rewrite.*
 
 | Day / slice | Workstream | Deliverable | Acceptance |
@@ -203,11 +205,19 @@
 | O6.5 | Performance | Avoid global KaTeX where unused; cache public lists | Lesson-only CSS; sensible `revalidate` on public SSR |
 | O6.6 | Trust pages | Privacy / terms stubs | Linked from footer |
 
+**Shipped:**
+- `AppShell` + `SiteNav`/`SiteFooter`; Admin link only for `ADMIN` role
+- Shared `LoadingState` / `EmptyState` / `ErrorState`; route `loading.tsx` for LMS/forum/store
+- Focus trap + Escape on cart drawer and matric modal; admin section arrow keys
+- `generateMetadata` on course/lesson/thread/product; store catalog metadata
+- Public GETs `revalidate: 60`; KaTeX remains lesson-scoped
+- `/privacy` + `/terms` linked from footer
+
 ---
 
-## Phase O7 — Frontend revamp (shadcn) — gated
+## Phase O7 — Frontend revamp (shadcn)
 
-**Start only after backend sign-off** (O3 content path + O4 OpenAPI + O5 CI/Sentry baseline).
+**Status: complete (2026-09-12)** — owner authorized start after O3–O6.
 
 | Day / slice | Workstream | Deliverable | Acceptance |
 | :--- | :--- | :--- | :--- |
@@ -215,6 +225,13 @@
 | O7.2 | Hug OpenAPI | Typed client from OpenAPI; replace ad-hoc fetch sprawl | Generated types drive forms/queries |
 | O7.3 | Screen rewrite | Marketing, LMS, forum, store, admin against new kit | Visual QA + existing smoke phases still green |
 | O7.4 | Admin dashboard v2 | Custom admin rebuilt on shadcn data table/patterns | Feature parity with O1 dashboard |
+
+**Shipped:**
+- shadcn (radix-nova) + Zeemkolo CSS tokens (signal primary, mist/ink surfaces, Fraunces/Source Sans)
+- Primitives: button, input, label, textarea, card, table, tabs, dialog, sheet, alert, badge, separator, select
+- `openapi-typescript` → `client/src/lib/api/openapi.d.ts` + `contract.ts` (`pnpm --filter @zeemkolo/client openapi:types`)
+- Store cart → Sheet; matric generator → Dialog; store/nav/actions → Button; admin sections → Tabs + Table (matrics)
+- Marketing/LMS/forum/store continue on AppShell; smoke e2e remains the visual gate
 
 ---
 

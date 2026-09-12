@@ -7,6 +7,9 @@ import {
   createStoreOrder,
 } from "@/lib/api-client";
 import { useCart } from "@/hooks/useCart";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function CheckoutForm() {
   const cart = useCart();
@@ -49,18 +52,18 @@ export function CheckoutForm() {
 
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
-      <label className="block text-sm text-brand-steel">
-        Email
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="checkout-email">Email</Label>
+        <Input
+          id="checkout-email"
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full border border-brand-steel/25 bg-white px-3 py-2 text-brand-ink"
         />
-      </label>
+      </div>
 
-      <fieldset className="text-sm text-brand-steel">
+      <fieldset className="text-sm text-muted-foreground">
         <legend className="mb-2">Currency</legend>
         <label className="mr-4">
           <input
@@ -82,7 +85,7 @@ export function CheckoutForm() {
         </label>
       </fieldset>
 
-      <fieldset className="text-sm text-brand-steel">
+      <fieldset className="text-sm text-muted-foreground">
         <legend className="mb-2">Payment</legend>
         <label className="mr-4">
           <input
@@ -104,7 +107,7 @@ export function CheckoutForm() {
         </label>
       </fieldset>
 
-      <ul className="space-y-1 text-sm text-brand-ink">
+      <ul className="space-y-1 text-sm text-foreground">
         {cart.items.map((item) => (
           <li key={item.productId}>
             {item.quantity}× {item.title}
@@ -112,16 +115,12 @@ export function CheckoutForm() {
         ))}
       </ul>
 
-      {error ? <p className="text-sm text-brand-signal">{error}</p> : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      <button
-        type="submit"
-        disabled={busy || !cart.items.length}
-        className="bg-brand-signal px-4 py-2 text-sm text-white disabled:opacity-50"
-      >
+      <Button type="submit" disabled={busy || !cart.items.length}>
         {busy ? "Processing…" : "Pay & confirm (dev)"}
-      </button>
-      <p className="text-xs text-brand-steel/70">
+      </Button>
+      <p className="text-xs text-muted-foreground">
         Payment provider still under selection — checkout uses a local confirm
         placeholder until the live rail is chosen. See{" "}
         <code>docs/dev-notes/payments-provider-pending.md</code>.

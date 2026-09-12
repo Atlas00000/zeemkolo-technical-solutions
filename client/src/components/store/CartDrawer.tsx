@@ -2,6 +2,17 @@
 
 import Link from "next/link";
 import type { CartItem } from "@/hooks/useCart";
+import { EmptyState } from "@/components/feedback/UiState";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 type CartDrawerProps = {
   open: boolean;
@@ -38,38 +49,32 @@ export function CartDrawer({
   onQuantity,
   onRemove,
 }: CartDrawerProps) {
-  if (!open) return null;
-
   const total = items.reduce((sum, item) => sum + lineTotal(item, currency), 0);
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-black/35">
-      <button
-        type="button"
-        className="h-full flex-1 cursor-default"
-        aria-label="Close cart overlay"
-        onClick={onClose}
-      />
-      <aside className="flex h-full w-full max-w-md flex-col bg-brand-mist p-6 shadow-xl">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl text-brand-ink">Cart</h2>
-          <button type="button" onClick={onClose} className="text-sm text-brand-steel">
-            Close
-          </button>
-        </div>
+    <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle className="font-display text-2xl">Cart</SheetTitle>
+        </SheetHeader>
 
-        <ul className="mt-6 flex-1 space-y-4 overflow-y-auto">
+        <ul className="mt-4 flex-1 space-y-4 overflow-y-auto px-1">
           {items.length === 0 ? (
-            <li className="text-sm text-brand-steel">Your cart is empty.</li>
+            <li>
+              <EmptyState
+                title="Your cart is empty"
+                description="Add a kit or handbook from the store catalog."
+              />
+            </li>
           ) : (
             items.map((item) => (
-              <li key={item.productId} className="border-b border-brand-steel/15 pb-4">
-                <p className="font-medium text-brand-ink">{item.title}</p>
-                <p className="text-xs text-brand-steel/70">{item.type}</p>
+              <li key={item.productId} className="border-b border-border pb-4">
+                <p className="font-medium text-foreground">{item.title}</p>
+                <p className="text-xs text-muted-foreground">{item.type}</p>
                 <div className="mt-2 flex items-center gap-2 text-sm">
-                  <label>
+                  <label className="flex items-center gap-2">
                     Qty
-                    <input
+                    <Input
                       type="number"
                       min={1}
                       max={20}
@@ -77,41 +82,46 @@ export function CartDrawer({
                       onChange={(e) =>
                         onQuantity(item.productId, Number(e.target.value) || 1)
                       }
-                      className="ml-2 w-16 border border-brand-steel/25 bg-white px-2 py-1"
+                      className="w-16"
                     />
                   </label>
-                  <span className="text-brand-steel">
+                  <span className="text-muted-foreground">
                     {format(lineTotal(item, currency), currency)}
                   </span>
-                  <button
+                  <Button
                     type="button"
-                    className="ml-auto text-brand-signal"
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto text-primary"
                     onClick={() => onRemove(item.productId)}
                   >
                     Remove
-                  </button>
+                  </Button>
                 </div>
               </li>
             ))
           )}
         </ul>
 
-        <div className="mt-4 border-t border-brand-steel/15 pt-4">
-          <p className="flex justify-between text-sm text-brand-ink">
+        <Separator className="my-4" />
+        <SheetFooter className="gap-3 sm:flex-col">
+          <p className="flex w-full justify-between text-sm text-foreground">
             <span>Total</span>
             <span>{format(total, currency)}</span>
           </p>
-          <Link
-            href="/store/checkout"
-            onClick={onClose}
-            className={`mt-4 block bg-brand-ink px-4 py-3 text-center text-sm text-white ${
-              items.length === 0 ? "pointer-events-none opacity-40" : ""
-            }`}
-          >
-            Checkout
-          </Link>
-        </div>
-      </aside>
-    </div>
+          {items.length === 0 ? (
+            <Button type="button" className="w-full" disabled>
+              Checkout
+            </Button>
+          ) : (
+            <Button asChild className="w-full">
+              <Link href="/store/checkout" onClick={onClose}>
+                Checkout
+              </Link>
+            </Button>
+          )}
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

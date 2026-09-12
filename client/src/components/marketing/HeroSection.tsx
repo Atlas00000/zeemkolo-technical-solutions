@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
@@ -31,18 +32,17 @@ export function HeroSection() {
           Product consulting for industrial clients, and the Zeemble Program for engineers who learn by building.
         </p>
         <div className="marketing-fade-up-delay-2 mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/consultation"
-            className="bg-brand-signal px-5 py-3 text-sm font-medium text-white transition hover:brightness-110"
+          <Button asChild size="lg" className="rounded-none">
+            <Link href="/consultation">Book a consultation</Link>
+          </Button>
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="rounded-none border-white/35 bg-transparent text-white hover:bg-white/10 hover:text-white"
           >
-            Book a consultation
-          </Link>
-          <Link
-            href="/zeemble"
-            className="border border-white/35 px-5 py-3 text-sm text-white transition hover:border-white"
-          >
-            Explore Zeemble
-          </Link>
+            <Link href="/zeemble">Explore Zeemble</Link>
+          </Button>
         </div>
       </div>
     </section>

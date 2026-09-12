@@ -43,4 +43,13 @@ test.describe("critical path smoke", () => {
         !url.includes("/admin"),
     ).toBe(true);
   });
+
+  test("privacy and terms stubs are linked", async ({ page }) => {
+    await page.goto("/privacy");
+    await expect(page.getByRole("heading", { name: /Privacy/i })).toBeVisible();
+    await page.goto("/terms");
+    await expect(
+      page.getByRole("heading", { name: /Terms of use/i }),
+    ).toBeVisible();
+  });
 });

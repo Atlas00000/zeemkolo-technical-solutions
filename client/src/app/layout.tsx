@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { clientEnv } from "@/env";
+import { cn } from "@/lib/utils";
 import "./globals.css";
 
-// Touch validated public env so misconfiguration fails at boot/build.
 void clientEnv.NEXT_PUBLIC_API_URL;
 
 const display = Fraunces({
@@ -32,8 +32,11 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${display.variable} ${sans.variable}`}>
-        <body className="min-h-screen bg-brand-mist font-sans text-brand-ink antialiased">
+      <html
+        lang="en"
+        className={cn(display.variable, sans.variable, "font-sans")}
+      >
+        <body className="min-h-screen bg-background font-sans text-foreground antialiased">
           {children}
         </body>
       </html>

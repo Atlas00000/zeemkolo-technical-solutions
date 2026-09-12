@@ -8,6 +8,7 @@ import {
   adminUpsertCourse,
   adminUpsertLesson,
 } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
 
 type Product = Awaited<
   ReturnType<typeof import("@/lib/api-client").adminListProducts>
@@ -40,13 +41,13 @@ export function AdminStoreCms({
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-2xl text-brand-ink">Store inventory</h2>
-        <button
+        <Button
           type="button"
-          className="bg-brand-ink px-3 py-1.5 text-sm text-white"
+          size="sm"
           onClick={() => setCreating((v) => !v)}
         >
           {creating ? "Cancel" : "New product"}
-        </button>
+        </Button>
       </div>
 
       {creating ? (
@@ -148,9 +149,7 @@ export function AdminStoreCms({
               placeholder="ebooks/example.pdf"
             />
           </label>
-          <button type="submit" className="bg-brand-signal px-4 py-2 text-white">
-            Create product
-          </button>
+          <Button type="submit">Create product</Button>
         </form>
       ) : null}
 
@@ -316,9 +315,11 @@ export function AdminLmsCms({
                         </span>
                       </span>
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           type="button"
-                          className="text-brand-signal underline-offset-2 hover:underline"
+                          variant="link"
+                          size="sm"
+                          className="text-primary"
                           onClick={() => {
                             setModuleId(m.id);
                             setEditingLessonId(l.id);
@@ -333,10 +334,11 @@ export function AdminLmsCms({
                           }}
                         >
                           Edit
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="border border-brand-steel/25 px-2 py-0.5"
+                          size="sm"
+                          variant="outline"
                           onClick={() => {
                             void (async () => {
                               await adminUpsertLesson(
@@ -359,7 +361,7 @@ export function AdminLmsCms({
                           }}
                         >
                           {l.isPublished ? "Unpublish" : "Publish"}
-                        </button>
+                        </Button>
                       </div>
                     </li>
                   ))}
@@ -487,17 +489,17 @@ export function AdminLmsCms({
           </label>
         </div>
         <div className="flex gap-2">
-          <button type="submit" className="bg-brand-signal px-4 py-2 text-white">
+          <Button type="submit">
             {editingLessonId ? "Save lesson" : "Create lesson"}
-          </button>
+          </Button>
           {editingLessonId ? (
-            <button
+            <Button
               type="button"
-              className="border border-brand-steel/25 px-4 py-2"
+              variant="outline"
               onClick={() => setEditingLessonId(null)}
             >
               Clear edit
-            </button>
+            </Button>
           ) : null}
         </div>
       </form>

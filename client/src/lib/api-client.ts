@@ -17,9 +17,12 @@ export type ConsultationSlot = {
 
 async function apiFetch<T>(
   path: string,
-  options: RequestInit & { token?: string } = {},
+  options: RequestInit & { token?: string; revalidate?: number | false } = {},
 ): Promise<T> {
-  const { token, headers, ...rest } = options;
+  const { token, headers, revalidate, ...rest } = options;
+  const method = (rest.method ?? "GET").toUpperCase();
+  const isPublicGet = method === "GET" && !token;
+
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
     headers: {
@@ -27,6 +30,13 @@ async function apiFetch<T>(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
+    ...(isPublicGet
+      ? {
+          next: {
+            revalidate: revalidate === false ? 0 : (revalidate ?? 60),
+          },
+        }
+      : { cache: "no-store" as const }),
   });
 
   const data = (await response.json().catch(() => ({}))) as T & {
@@ -353,6 +363,15 @@ export type StoreOrder = {
 export function fetchStoreProducts(currency: "NGN" | "USD" = "NGN") {
   return apiFetch<{ products: StoreProduct[]; currency: string }>(
     `/store/products?currency=${currency}`,
+  );
+}
+
+export function fetchStoreProduct(
+  slug: string,
+  currency: "NGN" | "USD" = "NGN",
+) {
+  return apiFetch<StoreProduct>(
+    `/store/products/${encodeURIComponent(slug)}?currency=${currency}`,
   );
 }
 
@@ -711,3 +730,10 @@ export function adminSetForumThreadLocked(
     },
   );
 }
+
+export {
+  IDEMPOTENT_POSTS,
+  OPENAPI_PATHS,
+  isIdempotentPostPath,
+} from "@/lib/api/contract";
+export type { ApiPaths, IdempotentPostPath, paths as OpenApiPaths } from "@/lib/api/contract";

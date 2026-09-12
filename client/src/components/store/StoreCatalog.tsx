@@ -8,10 +8,17 @@ import {
 import { useCart } from "@/hooks/useCart";
 import { ProductCard } from "@/components/store/ProductCard";
 import { CartDrawer } from "@/components/store/CartDrawer";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "@/components/feedback/UiState";
+import { Button } from "@/components/ui/button";
 
 export function StoreCatalog() {
   const [currency, setCurrency] = useState<"NGN" | "USD">("NGN");
   const [products, setProducts] = useState<StoreProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const cart = useCart();
@@ -19,6 +26,7 @@ export function StoreCatalog() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      setLoading(true);
       try {
         const data = await fetchStoreProducts(currency);
         if (!cancelled) {
@@ -29,6 +37,8 @@ export function StoreCatalog() {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Failed to load products");
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
     void load();
@@ -40,61 +50,68 @@ export function StoreCatalog() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2 text-sm">
-          <button
+        <div className="flex gap-2" role="group" aria-label="Currency">
+          <Button
             type="button"
+            size="sm"
+            variant={currency === "NGN" ? "default" : "outline"}
+            aria-pressed={currency === "NGN"}
             onClick={() => setCurrency("NGN")}
-            className={`border px-3 py-1.5 ${
-              currency === "NGN"
-                ? "border-brand-signal text-brand-signal"
-                : "border-brand-steel/25"
-            }`}
           >
             NGN
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            size="sm"
+            variant={currency === "USD" ? "default" : "outline"}
+            aria-pressed={currency === "USD"}
             onClick={() => setCurrency("USD")}
-            className={`border px-3 py-1.5 ${
-              currency === "USD"
-                ? "border-brand-signal text-brand-signal"
-                : "border-brand-steel/25"
-            }`}
           >
             USD
-          </button>
+          </Button>
         </div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => setCartOpen(true)}
-          className="border border-brand-steel/25 px-3 py-1.5 text-sm"
+          aria-haspopup="dialog"
         >
           Cart ({cart.count})
-        </button>
+        </Button>
       </div>
 
-      {error ? <p className="mt-6 text-brand-signal">{error}</p> : null}
+      {loading ? <LoadingState label="Loading catalog…" /> : null}
+      {!loading && error ? <ErrorState message={error} /> : null}
+      {!loading && !error && products.length === 0 ? (
+        <EmptyState
+          title="No products yet"
+          description="Published store items will appear here."
+        />
+      ) : null}
 
-      <div className="mt-4">
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            currency={currency}
-            onAdd={(p) => {
-              cart.addItem({
-                productId: p.id,
-                slug: p.slug,
-                title: p.title,
-                type: p.type,
-                unitPriceNgn: p.priceNgn.amountMinor,
-                unitPriceUsd: p.priceUsd.amountMinor,
-              });
-              setCartOpen(true);
-            }}
-          />
-        ))}
-      </div>
+      {!loading && !error ? (
+        <div className="mt-4">
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              currency={currency}
+              onAdd={(p) => {
+                cart.addItem({
+                  productId: p.id,
+                  slug: p.slug,
+                  title: p.title,
+                  type: p.type,
+                  unitPriceNgn: p.priceNgn.amountMinor,
+                  unitPriceUsd: p.priceUsd.amountMinor,
+                });
+                setCartOpen(true);
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
 
       <CartDrawer
         open={cartOpen}
