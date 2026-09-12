@@ -14,7 +14,7 @@ jobs:
     name: Typecheck & lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
@@ -40,7 +40,7 @@ jobs:
     name: Dependency audit (high+)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
@@ -91,7 +91,7 @@ jobs:
       NODE_ENV: test
       DOWNLOAD_TOKEN_SECRET: ci-download-token
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
@@ -119,7 +119,7 @@ jobs:
     name: Playwright smoke
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
