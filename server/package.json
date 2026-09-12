@@ -48,7 +48,7 @@
     "esbuild": "0.28.2",
     "prisma": "^6.3.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3",
+    "typescript": "^7.0.2",
     "vitest": "^3.2.7"
   },
   "prisma": {
