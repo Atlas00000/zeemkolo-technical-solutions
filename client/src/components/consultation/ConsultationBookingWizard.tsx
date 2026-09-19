@@ -1,21 +1,79 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, type PointerEvent } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { CalendarSlotGrid, type SlotOption } from "@/components/consultation/CalendarSlotGrid";
+import {
+  CalendarSlotGrid,
+  type SlotOption,
+} from "@/components/consultation/CalendarSlotGrid";
 import { IntakeForm } from "@/components/consultation/IntakeForm";
 import { SERVICE_TYPES } from "@/components/consultation/types";
+import {
+  BookingDeskProvider,
+  BookingField,
+  BookingHeader,
+  BookingInstrument,
+  BookingRail,
+  BookingStage,
+  useBookingDesk,
+  type BookingStep,
+} from "@/components/consultation/booking";
 import {
   bookConsultation,
   fetchConsultationSlots,
   uploadConsultationAttachment,
 } from "@/lib/api-client";
+import { Button } from "@/design/primitives/Button";
+import { Badge } from "@/design/primitives/Badge";
+import { Surface } from "@/design/primitives/Surface";
+import { Text } from "@/design/primitives/Text";
+import { StateCrossfade } from "@/design/motion/StateCrossfade";
+import { consultationTone } from "@/design/map/backend-status";
+import "./booking/booking-motion.css";
 
-type Step = 1 | 2 | 3;
+type Step = BookingStep;
+
+function BookingDeskShell({
+  children,
+  step,
+}: {
+  children: React.ReactNode;
+  step: Step;
+}) {
+  const { setPointer, reducedMotion } = useBookingDesk();
+
+  function onPointerMove(e: PointerEvent<HTMLElement>) {
+    if (reducedMotion) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPointer({
+      x: Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)),
+      y: Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)),
+      active: true,
+    });
+  }
+
+  function onPointerLeave() {
+    setPointer({ x: 0.72, y: 0.28, active: false });
+  }
+
+  return (
+    <section
+      className="relative isolate overflow-hidden text-[var(--ln-ink)]"
+      data-booking-desk
+      data-booking-step={step}
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
+    >
+      <BookingField />
+      {children}
+    </section>
+  );
+}
 
 export function ConsultationBookingWizard() {
   const { getToken, isSignedIn } = useAuth();
   const [step, setStep] = useState<Step>(1);
+  const [unlocked, setUnlocked] = useState<Step>(1);
   const [slots, setSlots] = useState<SlotOption[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
@@ -61,6 +119,11 @@ export function ConsultationBookingWizard() {
     }).format(new Date(selectedSlot));
   }, [selectedSlot]);
 
+  function goTo(next: Step) {
+    setStep(next);
+    setUnlocked((u) => (next > u ? next : u));
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!selectedSlot) return;
@@ -74,7 +137,9 @@ export function ConsultationBookingWizard() {
       if (file) {
         const buffer = await file.arrayBuffer();
         const contentBase64 = btoa(
-          Array.from(new Uint8Array(buffer), (b) => String.fromCharCode(b)).join(""),
+          Array.from(new Uint8Array(buffer), (b) =>
+            String.fromCharCode(b),
+          ).join(""),
         );
         const uploaded = await uploadConsultationAttachment(
           { filename: file.name, contentBase64 },
@@ -108,149 +173,219 @@ export function ConsultationBookingWizard() {
     }
   }
 
+  const stageTitle =
+    step === 1
+      ? "Pick a time slot"
+      : step === 2
+        ? "Project intake"
+        : "Confirm booking";
+
   if (confirmation) {
+    const tone = consultationTone("CONFIRMED");
     return (
-      <div className="space-y-4 rounded border border-green-700/30 bg-green-50 px-5 py-5">
-        <h2 className="font-display text-2xl text-brand-ink">Consultation booked</h2>
-        <p className="text-sm text-brand-steel">
-          Reference <code className="font-mono">{confirmation.id}</code>
-        </p>
-        <p className="text-sm text-brand-steel">
-          Slot:{" "}
-          {new Intl.DateTimeFormat("en-GB", {
-            timeZone: "Africa/Lagos",
-            dateStyle: "full",
-            timeStyle: "short",
-          }).format(new Date(confirmation.slotStartsAt))}{" "}
-          (Africa/Lagos)
-        </p>
-        <p className="text-sm text-brand-steel">
-          {confirmation.emailSent
-            ? "Confirmation email with calendar invite sent."
-            : "Booking saved. Email invite was skipped (mail not configured or failed)."}
-        </p>
-      </div>
+      <BookingDeskProvider step={3}>
+        <BookingDeskShell step={3}>
+          <div className="relative z-10 mx-auto grid max-w-shell gap-8 px-[var(--ln-page-x)] py-8 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:items-end md:py-12">
+            <div>
+              <BookingHeader />
+              <div className="mt-8 max-w-2xl">
+                <StateCrossfade stateKey={confirmation.id} tone={tone}>
+                  <Surface variant="signal" padding="lg" className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Text variant="title">Consultation booked</Text>
+                      <Badge tone={tone}>CONFIRMED</Badge>
+                    </div>
+                    <Text variant="muted">
+                      Reference{" "}
+                      <code className="ln-tabular text-[var(--ln-signal)]">
+                        {confirmation.id}
+                      </code>
+                    </Text>
+                    <Text variant="muted">
+                      Slot:{" "}
+                      {new Intl.DateTimeFormat("en-GB", {
+                        timeZone: "Africa/Lagos",
+                        dateStyle: "full",
+                        timeStyle: "short",
+                      }).format(new Date(confirmation.slotStartsAt))}{" "}
+                      (Africa/Lagos)
+                    </Text>
+                    <Text variant="muted">
+                      {confirmation.emailSent
+                        ? "Confirmation email with calendar invite sent."
+                        : "Booking saved. Email invite was skipped (mail not configured or failed)."}
+                    </Text>
+                  </Surface>
+                </StateCrossfade>
+              </div>
+            </div>
+            <BookingInstrument />
+          </div>
+        </BookingDeskShell>
+      </BookingDeskProvider>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <div className="flex gap-2 text-xs uppercase tracking-[0.15em] text-brand-steel">
-        <span className={step === 1 ? "text-brand-signal" : ""}>1 · Slot</span>
-        <span>·</span>
-        <span className={step === 2 ? "text-brand-signal" : ""}>2 · Details</span>
-        <span>·</span>
-        <span className={step === 3 ? "text-brand-signal" : ""}>3 · Confirm</span>
-      </div>
+    <BookingDeskProvider step={step}>
+      <BookingDeskShell step={step}>
+        <div className="relative z-10 mx-auto max-w-shell px-[var(--ln-page-x)] py-8 md:py-10">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-start lg:gap-10">
+            <div className="min-w-0">
+              <BookingHeader />
 
-      {step === 1 ? (
-        <section className="space-y-4">
-          <h2 className="font-display text-xl text-brand-ink">Pick a time slot</h2>
-          <CalendarSlotGrid
-            slots={slots}
-            selected={selectedSlot}
-            onSelect={setSelectedSlot}
-            loading={slotsLoading}
-          />
-          <button
-            type="button"
-            disabled={!canContinueStep1}
-            onClick={() => setStep(2)}
-            className="bg-brand-ink px-4 py-2.5 text-sm text-white disabled:opacity-50"
-          >
-            Continue
-          </button>
-        </section>
-      ) : null}
+              <form
+                onSubmit={onSubmit}
+                className="mt-6 flex min-h-0 flex-col gap-5 md:mt-8"
+              >
+                <BookingRail step={step} onStep={goTo} unlocked={unlocked} />
 
-      {step === 2 ? (
-        <section className="space-y-4">
-          <h2 className="font-display text-xl text-brand-ink">Project intake</h2>
-          <IntakeForm
-            guestName={guestName}
-            guestEmail={guestEmail}
-            serviceType={serviceType}
-            projectBrief={projectBrief}
-            onChange={(patch) => {
-              if (patch.guestName !== undefined) setGuestName(patch.guestName);
-              if (patch.guestEmail !== undefined) setGuestEmail(patch.guestEmail);
-              if (patch.serviceType !== undefined) setServiceType(patch.serviceType);
-              if (patch.projectBrief !== undefined) setProjectBrief(patch.projectBrief);
-            }}
-          />
-          <label className="block">
-            <span className="text-sm font-medium text-brand-steel">
-              Attachment (optional, max 5MB)
-            </span>
-            <input
-              type="file"
-              accept=".pdf,.zip,.png,.jpg,.jpeg,.txt"
-              className="mt-2 block w-full text-sm"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-          </label>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="border border-brand-steel/20 px-4 py-2.5 text-sm"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              disabled={!canContinueStep2}
-              onClick={() => setStep(3)}
-              className="bg-brand-ink px-4 py-2.5 text-sm text-white disabled:opacity-50"
-            >
-              Continue
-            </button>
+                <BookingStage key={step} title={stageTitle}>
+                  {step === 1 ? (
+                    <>
+                      <CalendarSlotGrid
+                        slots={slots}
+                        selected={selectedSlot}
+                        onSelect={setSelectedSlot}
+                        loading={slotsLoading}
+                      />
+                      <Button
+                        type="button"
+                        disabled={!canContinueStep1}
+                        onClick={() => goTo(2)}
+                      >
+                        Continue
+                      </Button>
+                    </>
+                  ) : null}
+
+                  {step === 2 ? (
+                    <>
+                      <div className="max-h-[min(22rem,50svh)] space-y-4 overflow-y-auto overscroll-contain pr-1">
+                        <IntakeForm
+                          guestName={guestName}
+                          guestEmail={guestEmail}
+                          serviceType={serviceType}
+                          projectBrief={projectBrief}
+                          onChange={(patch) => {
+                            if (patch.guestName !== undefined)
+                              setGuestName(patch.guestName);
+                            if (patch.guestEmail !== undefined)
+                              setGuestEmail(patch.guestEmail);
+                            if (patch.serviceType !== undefined)
+                              setServiceType(patch.serviceType);
+                            if (patch.projectBrief !== undefined)
+                              setProjectBrief(patch.projectBrief);
+                          }}
+                        />
+                        <label className="block">
+                          <span className="text-sm font-medium text-[var(--ln-muted)]">
+                            Attachment (optional, max 5MB)
+                          </span>
+                          <input
+                            type="file"
+                            accept=".pdf,.zip,.png,.jpg,.jpeg,.txt"
+                            className="mt-2 block w-full text-sm text-[var(--ln-muted)] file:mr-3 file:border file:border-[var(--ln-hairline)] file:bg-[var(--ln-plane)] file:px-3 file:py-1.5 file:text-[var(--ln-ink)]"
+                            onChange={(e) =>
+                              setFile(e.target.files?.[0] ?? null)
+                            }
+                          />
+                        </label>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => goTo(1)}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          type="button"
+                          disabled={!canContinueStep2}
+                          onClick={() => goTo(3)}
+                        >
+                          Continue
+                        </Button>
+                      </div>
+                    </>
+                  ) : null}
+
+                  {step === 3 ? (
+                    <>
+                      <ul className="space-y-2 text-sm text-[var(--ln-muted)]">
+                        <li>
+                          <strong className="text-[var(--ln-ink)]">When:</strong>{" "}
+                          {selectedLabel}
+                        </li>
+                        <li>
+                          <strong className="text-[var(--ln-ink)]">
+                            Service:
+                          </strong>{" "}
+                          {serviceType}
+                        </li>
+                        <li>
+                          <strong className="text-[var(--ln-ink)]">Name:</strong>{" "}
+                          <span className="text-[var(--ln-mark)]">
+                            {guestName}
+                          </span>
+                        </li>
+                        <li>
+                          <strong className="text-[var(--ln-ink)]">
+                            Email:
+                          </strong>{" "}
+                          {guestEmail}
+                        </li>
+                        {file ? (
+                          <li>
+                            <strong className="text-[var(--ln-ink)]">
+                              File:
+                            </strong>{" "}
+                            {file.name}
+                          </li>
+                        ) : null}
+                      </ul>
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => goTo(2)}
+                        >
+                          Back
+                        </Button>
+                        <Button type="submit" disabled={submitting}>
+                          {submitting ? "Booking…" : "Confirm consultation"}
+                        </Button>
+                      </div>
+                    </>
+                  ) : null}
+
+                  {error ? (
+                    <p className="text-sm text-[var(--ln-halt)]" role="alert">
+                      {error}
+                    </p>
+                  ) : null}
+                </BookingStage>
+              </form>
+            </div>
+
+            <div className="relative hidden min-h-[14rem] lg:block">
+              <p className="mb-3 font-mono text-[10px] tracking-[0.22em] text-[var(--ln-signal)] uppercase">
+                Desk instrument · step {String(step).padStart(2, "0")}
+              </p>
+              <BookingInstrument />
+            </div>
           </div>
-        </section>
-      ) : null}
 
-      {step === 3 ? (
-        <section className="space-y-4">
-          <h2 className="font-display text-xl text-brand-ink">Confirm booking</h2>
-          <ul className="space-y-2 text-sm text-brand-steel">
-            <li>
-              <strong>When:</strong> {selectedLabel}
-            </li>
-            <li>
-              <strong>Service:</strong> {serviceType}
-            </li>
-            <li>
-              <strong>Name:</strong> {guestName}
-            </li>
-            <li>
-              <strong>Email:</strong> {guestEmail}
-            </li>
-            {file ? (
-              <li>
-                <strong>File:</strong> {file.name}
-              </li>
-            ) : null}
-          </ul>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              className="border border-brand-steel/20 px-4 py-2.5 text-sm"
-            >
-              Back
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-brand-signal px-4 py-2.5 text-sm text-white disabled:opacity-50"
-            >
-              {submitting ? "Booking…" : "Confirm consultation"}
-            </button>
+          {/* Mobile instrument — compact, below form, not obstructive */}
+          <div className="mt-8 border-t border-[var(--ln-hairline)] pt-6 lg:hidden">
+            <p className="mb-3 font-mono text-[10px] tracking-[0.22em] text-[var(--ln-signal)] uppercase">
+              Desk instrument · step {String(step).padStart(2, "0")}
+            </p>
+            <BookingInstrument />
           </div>
-        </section>
-      ) : null}
-
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
-    </form>
+        </div>
+      </BookingDeskShell>
+    </BookingDeskProvider>
   );
 }

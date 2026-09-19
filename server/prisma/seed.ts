@@ -55,7 +55,7 @@ async function main() {
                   isPreview: true,
                   isPublished: true,
                   sortOrder: 1,
-                  schematicKey: "/schematics/sample-circuit.svg",
+                  schematicKey: "/schematics/series-circuit.jpg",
                   markdownBody: `# Welcome to Zeemble
 
 This preview lesson introduces the Zeemble Program.
@@ -186,7 +186,7 @@ pio device monitor -b 115200
     data: {
       isPreview: true,
       isPublished: true,
-      schematicKey: "/schematics/sample-circuit.svg",
+      schematicKey: "/schematics/series-circuit.jpg",
       markdownBody: welcomeMarkdown,
     },
   });

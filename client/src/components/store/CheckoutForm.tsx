@@ -7,9 +7,8 @@ import {
   createStoreOrder,
 } from "@/lib/api-client";
 import { useCart } from "@/hooks/useCart";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/design/primitives/Button";
+import { Input } from "@/design/primitives/Input";
 
 export function CheckoutForm() {
   const cart = useCart();
@@ -39,7 +38,6 @@ export function CheckoutForm() {
         })),
       });
 
-      // Dev path: simulate gateway confirmation so downloads work locally.
       await confirmStoreOrderTest(order.id);
       cart.clear();
       router.push(`/store/orders/${order.id}`);
@@ -51,9 +49,14 @@ export function CheckoutForm() {
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
+    <form onSubmit={(e) => void onSubmit(e)} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="checkout-email">Email</Label>
+        <label
+          htmlFor="checkout-email"
+          className="text-sm font-medium text-[var(--ln-muted)]"
+        >
+          Email
+        </label>
         <Input
           id="checkout-email"
           type="email"
@@ -63,8 +66,10 @@ export function CheckoutForm() {
         />
       </div>
 
-      <fieldset className="text-sm text-muted-foreground">
-        <legend className="mb-2">Currency</legend>
+      <fieldset className="text-sm text-[var(--ln-muted)]">
+        <legend className="mb-2 font-medium text-[var(--ln-ink)]">
+          Currency
+        </legend>
         <label className="mr-4">
           <input
             type="radio"
@@ -85,8 +90,10 @@ export function CheckoutForm() {
         </label>
       </fieldset>
 
-      <fieldset className="text-sm text-muted-foreground">
-        <legend className="mb-2">Payment</legend>
+      <fieldset className="text-sm text-[var(--ln-muted)]">
+        <legend className="mb-2 font-medium text-[var(--ln-ink)]">
+          Payment
+        </legend>
         <label className="mr-4">
           <input
             type="radio"
@@ -107,23 +114,26 @@ export function CheckoutForm() {
         </label>
       </fieldset>
 
-      <ul className="space-y-1 text-sm text-foreground">
+      <ul className="space-y-1 border-t border-[var(--ln-hairline)] pt-4 text-sm text-[var(--ln-ink)]">
         {cart.items.map((item) => (
           <li key={item.productId}>
-            {item.quantity}× {item.title}
+            <span className="ln-tabular">{item.quantity}</span>× {item.title}
           </li>
         ))}
       </ul>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-[var(--ln-halt)]" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={busy || !cart.items.length}>
         {busy ? "Processing…" : "Pay & confirm (dev)"}
       </Button>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-[var(--ln-faint)]">
         Payment provider still under selection — checkout uses a local confirm
-        placeholder until the live rail is chosen. See{" "}
-        <code>docs/dev-notes/payments-provider-pending.md</code>.
+        placeholder until the live rail is chosen.
       </p>
     </form>
   );

@@ -1,0 +1,28 @@
+/* Ledger Noir — elevation / plane language
+ * Shadow tokens live in color.css (theme-aware light vs dark).
+ */
+:root {
+  --ln-radius-none: 0;
+  --ln-radius-sm: 2px;
+  --ln-radius-md: 4px;
+  --radius: 2px; /* shadcn — hairline, not soft SaaS pills */
+}
+
+.ln-plane {
+  background: var(--ln-plane);
+  border: 1px solid var(--ln-hairline);
+  box-shadow: var(--ln-shadow-plane);
+}
+
+.ln-plane-flat {
+  background: var(--ln-plane);
+  border: 1px solid var(--ln-hairline);
+}
+
+.ln-hairline-x {
+  border-top: 1px solid var(--ln-hairline);
+}
+
+.ln-hairline-y {
+  border-left: 1px solid var(--ln-hairline);
+}

@@ -23,10 +23,7 @@ import {
   AdminLmsCms,
   AdminStoreCms,
 } from "@/components/admin/AdminContentCms";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/design/primitives/Button";
 import {
   Table,
   TableBody,
@@ -35,6 +32,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ActionRail } from "@/design/shells/ActionRail";
+import { MetricStrip } from "@/design/patterns/MetricStrip";
+import { Badge } from "@/design/primitives/Badge";
+import { Text } from "@/design/primitives/Text";
+import { SkeletonLine } from "@/design/patterns/Skeleton";
+import {
+  consultationTone,
+  gateTone,
+  matricGate,
+  orderTone,
+  type ConsultationLifecycle,
+  type OrderLifecycle,
+} from "@/design/map/backend-status";
 
 const SECTIONS = [
   { id: "overview", label: "Overview" },
@@ -144,82 +154,111 @@ export function AdminDashboard() {
 
   if (!isSignedIn) {
     return (
-      <p className="text-brand-steel">
+      <Text variant="muted">
         Sign in required.{" "}
-        <Link href="/sign-in" className="text-brand-signal underline">
+        <Link
+          href="/sign-in"
+          className="text-[var(--ln-signal)] underline underline-offset-2"
+        >
           Sign in
         </Link>
-      </p>
+      </Text>
     );
   }
 
   if (me && me.role !== "ADMIN") {
     return (
-      <p className="text-brand-signal">
+      <p className="text-[var(--ln-halt)]" role="alert">
         Forbidden — admin role required (current: {me.role}).
       </p>
     );
   }
 
   if (!token || !me) {
-    return <p className="text-brand-steel">Loading admin panel…</p>;
+    return (
+      <div className="space-y-3" role="status" aria-live="polite">
+        <SkeletonLine className="w-48" />
+        <SkeletonLine className="w-72" />
+        <Text variant="meta">Loading admin panel…</Text>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8">
-      {error ? <p className="text-brand-signal">{error}</p> : null}
+    <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-10">
+      <ActionRail
+        title="Desk"
+        items={SECTIONS.map((s) => ({
+          id: s.id,
+          label: s.label,
+          active: section === s.id,
+          onClick: () => setSection(s.id),
+        }))}
+        footer={
+          <Text variant="meta">
+            {me.email} · zone.admin
+          </Text>
+        }
+      />
 
-      <Tabs
-        value={section}
-        onValueChange={(value) => setSection(value as SectionId)}
-        className="gap-4"
-      >
-        <TabsList
-          variant="line"
-          className="h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0"
-          aria-label="Admin sections"
-        >
-          {SECTIONS.map((s) => (
-            <TabsTrigger
-              key={s.id}
-              value={s.id}
-              className="rounded-none border border-transparent px-3 py-1.5 data-[state=active]:border-foreground data-[state=active]:bg-foreground data-[state=active]:text-background"
-            >
-              {s.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <div className="min-w-0 flex-1 space-y-8">
+      {error ? (
+        <p className="text-sm text-[var(--ln-halt)]" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       {section === "overview" && overview ? (
         <section className="space-y-4">
-          <h2 className="font-display text-2xl text-foreground">Overview</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {(
-              [
-                ["Users", overview.users],
-                ["Open consultations", overview.openConsultations],
-                ["Pending orders", overview.pendingOrders],
-                ["Unclaimed matrics", overview.unclaimedMatrics],
-                ["Claimed matrics", overview.claimedMatrics],
-                ["Locked threads", overview.lockedThreads],
-              ] as const
-            ).map(([label, value]) => (
-              <Card key={label} className="rounded-md shadow-none">
-                <CardContent className="px-4 py-5">
-                  <p className="text-xs tracking-wide text-muted-foreground uppercase">
-                    {label}
-                  </p>
-                  <p className="mt-2 font-display text-3xl text-foreground">
-                    {value}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <p className="text-sm text-muted-foreground">
+          <Text variant="title">Overview</Text>
+          <MetricStrip
+            items={[
+              {
+                id: "users",
+                label: "Users",
+                value: overview.users,
+                tone: "ink",
+              },
+              {
+                id: "open",
+                label: "Open consults",
+                value: overview.openConsultations,
+                tone: "warn",
+              },
+              {
+                id: "pending",
+                label: "Pending orders",
+                value: overview.pendingOrders,
+                tone: "warn",
+              },
+            ]}
+          />
+          <MetricStrip
+            className="sm:grid-cols-3"
+            items={[
+              {
+                id: "unclaimed",
+                label: "Unclaimed matrics",
+                value: overview.unclaimedMatrics,
+                tone: "skip",
+              },
+              {
+                id: "claimed",
+                label: "Claimed matrics",
+                value: overview.claimedMatrics,
+                tone: "signal",
+              },
+              {
+                id: "locked",
+                label: "Locked threads",
+                value: overview.lockedThreads,
+                tone: "halt",
+              },
+            ]}
+          />
+          <Text variant="meta">
             Signed in as {me.email} · role {me.role}
-          </p>
+          </Text>
         </section>
       ) : null}
 
@@ -235,7 +274,7 @@ export function AdminDashboard() {
                 key={f}
                 type="button"
                 size="sm"
-                variant={matricFilter === f ? "default" : "outline"}
+                variant={matricFilter === f ? "primary" : "secondary"}
                 onClick={() => setMatricFilter(f)}
               >
                 {f}
@@ -262,10 +301,12 @@ export function AdminDashboard() {
                   matrics.map((m) => (
                     <TableRow key={m.id}>
                       <TableCell className="font-mono">{m.code}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {m.claimed
-                          ? `claimed · ${m.user?.email ?? "user"}`
-                          : "unclaimed"}
+                      <TableCell>
+                        <Badge tone={gateTone(matricGate(m.claimed))}>
+                          {m.claimed
+                            ? `claimed · ${m.user?.email ?? "user"}`
+                            : "unclaimed"}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -360,7 +401,15 @@ export function AdminDashboard() {
                         {new Date(c.slotStartsAt).toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <select
+                        <div className="flex flex-col gap-2">
+                          <Badge
+                            tone={consultationTone(
+                              c.status as ConsultationLifecycle,
+                            )}
+                          >
+                            {c.status}
+                          </Badge>
+                          <select
                           value={c.status}
                           className="h-8 rounded-md border border-input bg-background px-2 text-xs"
                           aria-label={`Status for ${c.guestName}`}
@@ -381,6 +430,7 @@ export function AdminDashboard() {
                             </option>
                           ))}
                         </select>
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -459,7 +509,9 @@ export function AdminDashboard() {
                         {o.currency} {(o.totalAmount / 100).toFixed(2)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">{o.status}</Badge>
+                        <Badge tone={orderTone(o.status as OrderLifecycle)}>
+                          {o.status}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))
@@ -511,7 +563,7 @@ export function AdminDashboard() {
                         {t.category.title}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={t.isLocked ? "destructive" : "secondary"}>
+                        <Badge tone={gateTone(t.isLocked ? "halt" : "allow")}>
                           {t.isLocked ? "locked" : "open"}
                         </Badge>
                       </TableCell>
@@ -519,7 +571,7 @@ export function AdminDashboard() {
                         <Button
                           type="button"
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => {
                             void (async () => {
                               await adminSetForumThreadLocked(
@@ -583,6 +635,7 @@ export function AdminDashboard() {
           </div>
         </section>
       ) : null}
+      </div>
     </div>
   );
 }

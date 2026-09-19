@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/shell/AppShell";
 import { fetchForumThread } from "@/lib/api-client";
-import { ThreadView } from "@/components/forum/ThreadView";
+import { ThreadDesk } from "@/components/forum/thread";
 
 export const revalidate = 60;
 
@@ -38,14 +37,8 @@ export default async function ForumThreadPage({ params }: ThreadPageProps) {
 
   return (
     <AppShell>
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <ThreadView thread={thread} />
-        <Link
-          href="/forum"
-          className="mt-12 inline-block text-sm text-brand-signal underline-offset-2 hover:underline"
-        >
-          ← All threads
-        </Link>
+      <main>
+        <ThreadDesk thread={thread} />
       </main>
     </AppShell>
   );

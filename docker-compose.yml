@@ -3,6 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: zeemkolo_postgres
     restart: unless-stopped
+    command: ["postgres", "-c", "log_min_duration_statement=500"]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-zeemkolo_admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zeemkolo_secret_password}
@@ -16,6 +17,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7-alpine
@@ -30,6 +36,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Optional full-stack containers (use hybrid local: db:up + pnpm dev)
   server:
@@ -48,6 +59,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-string}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,6 +67,11 @@ services:
         condition: service_healthy
     profiles:
       - full
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   client:
     build:
@@ -66,10 +83,16 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+      NEXT_PUBLIC_LOG_LEVEL: ${NEXT_PUBLIC_LOG_LEVEL:-warn}
     depends_on:
       - server
     profiles:
       - full
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:

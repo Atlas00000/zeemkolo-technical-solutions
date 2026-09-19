@@ -40,7 +40,7 @@ export function AdminStoreCms({
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-2xl text-brand-ink">Store inventory</h2>
+        <h2 className="font-display text-2xl text-[var(--ln-ink)]">Store inventory</h2>
         <Button
           type="button"
           size="sm"
@@ -52,7 +52,7 @@ export function AdminStoreCms({
 
       {creating ? (
         <form
-          className="space-y-3 border border-brand-steel/20 bg-white/50 p-4 text-sm"
+          className="space-y-3 border border-[var(--ln-hairline)] bg-[var(--ln-plane)] p-4 text-sm"
           onSubmit={(e) => {
             e.preventDefault();
             void (async () => {
@@ -76,20 +76,20 @@ export function AdminStoreCms({
               ["description", "Description"],
             ] as const
           ).map(([key, label]) => (
-            <label key={key} className="block text-brand-steel">
+            <label key={key} className="block text-[var(--ln-muted)]">
               {label}
               <input
-                className="mt-1 w-full border border-brand-steel/25 bg-white px-2 py-1"
+                className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
                 value={form[key]}
                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                 required
               />
             </label>
           ))}
-          <label className="block text-brand-steel">
+          <label className="block text-[var(--ln-muted)]">
             Type
             <select
-              className="mt-1 w-full border border-brand-steel/25 bg-white px-2 py-1"
+              className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
               value={form.type}
               onChange={(e) =>
                 setForm({
@@ -103,36 +103,36 @@ export function AdminStoreCms({
             </select>
           </label>
           <div className="flex flex-wrap gap-3">
-            <label className="text-brand-steel">
+            <label className="text-[var(--ln-muted)]">
               Price NGN (kobo)
               <input
                 type="number"
                 min={0}
-                className="ml-2 w-28 border border-brand-steel/25 bg-white px-2 py-1"
+                className="ml-2 w-28 border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
                 value={form.priceNgn}
                 onChange={(e) =>
                   setForm({ ...form, priceNgn: Number(e.target.value) || 0 })
                 }
               />
             </label>
-            <label className="text-brand-steel">
+            <label className="text-[var(--ln-muted)]">
               Price USD (cents)
               <input
                 type="number"
                 min={0}
-                className="ml-2 w-28 border border-brand-steel/25 bg-white px-2 py-1"
+                className="ml-2 w-28 border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
                 value={form.priceUsd}
                 onChange={(e) =>
                   setForm({ ...form, priceUsd: Number(e.target.value) || 0 })
                 }
               />
             </label>
-            <label className="text-brand-steel">
+            <label className="text-[var(--ln-muted)]">
               Stock
               <input
                 type="number"
                 min={0}
-                className="ml-2 w-20 border border-brand-steel/25 bg-white px-2 py-1"
+                className="ml-2 w-20 border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
                 value={form.stock}
                 onChange={(e) =>
                   setForm({ ...form, stock: Number(e.target.value) || 0 })
@@ -140,10 +140,10 @@ export function AdminStoreCms({
               />
             </label>
           </div>
-          <label className="block text-brand-steel">
+          <label className="block text-[var(--ln-muted)]">
             Digital key (R2)
             <input
-              className="mt-1 w-full border border-brand-steel/25 bg-white px-2 py-1"
+              className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
               value={form.digitalKey}
               onChange={(e) => setForm({ ...form, digitalKey: e.target.value })}
               placeholder="ebooks/example.pdf"
@@ -155,24 +155,24 @@ export function AdminStoreCms({
 
       <ul className="space-y-4">
         {products.map((p) => (
-          <li key={p.id} className="border-t border-brand-steel/15 pt-4">
-            <p className="font-medium text-brand-ink">
+          <li key={p.id} className="border-t border-[var(--ln-hairline)] pt-4">
+            <p className="font-medium text-[var(--ln-ink)]">
               {p.title}{" "}
-              <span className="text-sm text-brand-steel/70">
+              <span className="text-sm text-[var(--ln-faint)]">
                 ({p.type} · {p.slug})
               </span>
             </p>
-            <p className="mt-1 line-clamp-2 text-sm text-brand-steel/80">
+            <p className="mt-1 line-clamp-2 text-sm text-[var(--ln-muted)]">
               {p.description}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-              <label className="text-brand-steel">
+              <label className="text-[var(--ln-muted)]">
                 Stock
                 <input
                   type="number"
                   min={0}
                   defaultValue={p.stock}
-                  className="ml-2 w-20 border border-brand-steel/25 bg-white px-2 py-1"
+                  className="ml-2 w-20 border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
                   onBlur={(e) => {
                     const stock = Number(e.target.value);
                     if (!Number.isFinite(stock) || stock === p.stock) return;
@@ -183,13 +183,13 @@ export function AdminStoreCms({
                   }}
                 />
               </label>
-              <label className="text-brand-steel">
+              <label className="text-[var(--ln-muted)]">
                 NGN kobo
                 <input
                   type="number"
                   min={0}
                   defaultValue={p.priceNgn}
-                  className="ml-2 w-28 border border-brand-steel/25 bg-white px-2 py-1"
+                  className="ml-2 w-28 border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
                   onBlur={(e) => {
                     const priceNgn = Number(e.target.value);
                     if (!Number.isFinite(priceNgn) || priceNgn === p.priceNgn)
@@ -201,7 +201,7 @@ export function AdminStoreCms({
                   }}
                 />
               </label>
-              <label className="flex items-center gap-2 text-brand-steel">
+              <label className="flex items-center gap-2 text-[var(--ln-muted)]">
                 <input
                   type="checkbox"
                   checked={p.isPublished}
@@ -220,7 +220,7 @@ export function AdminStoreCms({
               </label>
             </div>
             {p.digitalKey ? (
-              <p className="mt-1 font-mono text-xs text-brand-steel">
+              <p className="mt-1 font-mono text-xs text-[var(--ln-muted)]">
                 digitalKey: {p.digitalKey}
               </p>
             ) : null}
@@ -261,17 +261,17 @@ export function AdminLmsCms({
 
   return (
     <section className="space-y-6">
-      <h2 className="font-display text-2xl text-brand-ink">LMS content</h2>
+      <h2 className="font-display text-2xl text-[var(--ln-ink)]">LMS content</h2>
 
       <ul className="space-y-4 text-sm">
         {courses.map((c) => (
-          <li key={c.id} className="border-t border-brand-steel/15 pt-3">
+          <li key={c.id} className="border-t border-[var(--ln-hairline)] pt-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-medium text-brand-ink">
+              <p className="font-medium text-[var(--ln-ink)]">
                 {c.title}{" "}
-                <span className="text-brand-steel/70">({c.slug})</span>
+                <span className="text-[var(--ln-faint)]">({c.slug})</span>
               </p>
-              <label className="flex items-center gap-2 text-brand-steel">
+              <label className="flex items-center gap-2 text-[var(--ln-muted)]">
                 <input
                   type="checkbox"
                   checked={c.isPublished}
@@ -297,19 +297,19 @@ export function AdminLmsCms({
             </div>
             {c.modules.map((m) => (
               <div key={m.id} className="mt-3 ml-2">
-                <p className="text-brand-steel">
+                <p className="text-[var(--ln-muted)]">
                   Module: {m.title}{" "}
-                  <span className="text-brand-steel/60">({m.slug})</span>
+                  <span className="text-[var(--ln-faint)]">({m.slug})</span>
                 </p>
                 <ul className="mt-2 space-y-2">
                   {m.lessons.map((l) => (
                     <li
                       key={l.id}
-                      className="flex flex-wrap items-center justify-between gap-2 border-t border-brand-steel/10 pt-2"
+                      className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--ln-hairline)] pt-2"
                     >
-                      <span className="text-brand-ink">
+                      <span className="text-[var(--ln-ink)]">
                         {l.title}{" "}
-                        <span className="text-brand-steel/60">
+                        <span className="text-[var(--ln-faint)]">
                           {l.isPublished ? "published" : "draft"}
                           {l.isPreview ? " · preview" : ""}
                         </span>
@@ -373,7 +373,7 @@ export function AdminLmsCms({
       </ul>
 
       <form
-        className="space-y-3 border border-brand-steel/20 bg-white/50 p-4 text-sm"
+        className="space-y-3 border border-[var(--ln-hairline)] bg-[var(--ln-plane)] p-4 text-sm"
         onSubmit={(e) => {
           e.preventDefault();
           if (!moduleId) return;
@@ -404,13 +404,13 @@ export function AdminLmsCms({
           })();
         }}
       >
-        <h3 className="font-display text-lg text-brand-ink">
+        <h3 className="font-display text-lg text-[var(--ln-ink)]">
           {editingLessonId ? "Edit lesson" : "Create lesson"}
         </h3>
-        <label className="block text-brand-steel">
+        <label className="block text-[var(--ln-muted)]">
           Module
           <select
-            className="mt-1 w-full border border-brand-steel/25 bg-white px-2 py-1"
+            className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
             value={moduleId}
             onChange={(e) => setModuleId(e.target.value)}
             required
@@ -422,10 +422,10 @@ export function AdminLmsCms({
             ))}
           </select>
         </label>
-        <label className="block text-brand-steel">
+        <label className="block text-[var(--ln-muted)]">
           Slug
           <input
-            className="mt-1 w-full border border-brand-steel/25 bg-white px-2 py-1"
+            className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
             value={lessonForm.slug}
             onChange={(e) =>
               setLessonForm({ ...lessonForm, slug: e.target.value })
@@ -433,10 +433,10 @@ export function AdminLmsCms({
             required
           />
         </label>
-        <label className="block text-brand-steel">
+        <label className="block text-[var(--ln-muted)]">
           Title
           <input
-            className="mt-1 w-full border border-brand-steel/25 bg-white px-2 py-1"
+            className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
             value={lessonForm.title}
             onChange={(e) =>
               setLessonForm({ ...lessonForm, title: e.target.value })
@@ -444,21 +444,21 @@ export function AdminLmsCms({
             required
           />
         </label>
-        <label className="block text-brand-steel">
+        <label className="block text-[var(--ln-muted)]">
           Schematic key
           <input
-            className="mt-1 w-full border border-brand-steel/25 bg-white px-2 py-1"
+            className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
             value={lessonForm.schematicKey}
             onChange={(e) =>
               setLessonForm({ ...lessonForm, schematicKey: e.target.value })
             }
-            placeholder="/schematics/sample-circuit.svg"
+            placeholder="/schematics/series-circuit.jpg"
           />
         </label>
-        <label className="block text-brand-steel">
+        <label className="block text-[var(--ln-muted)]">
           Markdown body
           <textarea
-            className="mt-1 min-h-40 w-full border border-brand-steel/25 bg-white px-2 py-1 font-mono text-xs"
+            className="mt-1 min-h-40 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1 font-mono text-xs"
             value={lessonForm.markdownBody}
             onChange={(e) =>
               setLessonForm({ ...lessonForm, markdownBody: e.target.value })
@@ -467,7 +467,7 @@ export function AdminLmsCms({
           />
         </label>
         <div className="flex flex-wrap gap-4">
-          <label className="flex items-center gap-2 text-brand-steel">
+          <label className="flex items-center gap-2 text-[var(--ln-muted)]">
             <input
               type="checkbox"
               checked={lessonForm.isPreview}
@@ -477,7 +477,7 @@ export function AdminLmsCms({
             />
             Preview (public)
           </label>
-          <label className="flex items-center gap-2 text-brand-steel">
+          <label className="flex items-center gap-2 text-[var(--ln-muted)]">
             <input
               type="checkbox"
               checked={lessonForm.isPublished}

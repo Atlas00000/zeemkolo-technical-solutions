@@ -1,0 +1,89 @@
+/* Client voices motion */
+
+@keyframes voices-stage-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes voices-scan {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+@keyframes voices-scope {
+  0% {
+    top: 12%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.65;
+  }
+  90% {
+    opacity: 0.65;
+  }
+  100% {
+    top: 88%;
+    opacity: 0;
+  }
+}
+
+.voices-stage-enter {
+  animation: voices-stage-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.voices-rail-scan {
+  animation: voices-scan 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.voices-scope {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--ln-signal) 35%, transparent),
+    var(--ln-signal),
+    color-mix(in srgb, var(--ln-signal) 35%, transparent),
+    transparent
+  );
+  animation: voices-scope 9s linear infinite;
+}
+
+.voices-rail-active {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ln-signal) 8%, transparent) 0%,
+    transparent 55%
+  );
+}
+
+.voices-rail-active:focus-visible,
+.voices-rail-active + * {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voices-stage-enter,
+  .voices-rail-scan,
+  .voices-scope {
+    animation: none;
+  }
+
+  .voices-stage-enter {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}

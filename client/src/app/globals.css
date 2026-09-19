@@ -1,12 +1,10 @@
+@import "../design/tokens/index.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-display: "Fraunces", Georgia, serif;
-  --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
-}
-
+/* Legacy marketing motion (kept; reduced-motion gated) */
 @keyframes marketing-fade-up {
   from {
     opacity: 0;
@@ -75,50 +73,118 @@
     --font-heading: var(--font-display);
     --font-sans: var(--font-sans);
   }
-  /* Zeemkolo brand → shadcn tokens (O7.1). Signal orange primary; mist/ink surfaces. */
-  :root {
-    --background: #e8eef2;
-    --foreground: #0f1720;
-    --card: #f4f7f9;
-    --card-foreground: #0f1720;
-    --popover: #f4f7f9;
-    --popover-foreground: #0f1720;
-    --primary: #c45c26;
-    --primary-foreground: #ffffff;
-    --secondary: #1e2a36;
-    --secondary-foreground: #e8eef2;
-    --muted: #dce4ea;
-    --muted-foreground: #1e2a36;
-    --accent: #d5dee6;
-    --accent-foreground: #0f1720;
-    --destructive: #b42318;
-    --border: color-mix(in srgb, #1e2a36 18%, transparent);
-    --input: color-mix(in srgb, #1e2a36 22%, transparent);
-    --ring: #c45c26;
-    --chart-1: #c45c26;
-    --chart-2: #1e2a36;
-    --chart-3: #0f1720;
-    --chart-4: #6b7c8a;
-    --chart-5: #d5dee6;
-    --radius: 0.25rem;
-    --sidebar: #f4f7f9;
-    --sidebar-foreground: #0f1720;
-    --sidebar-primary: #c45c26;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #dce4ea;
-    --sidebar-accent-foreground: #0f1720;
-    --sidebar-border: color-mix(in srgb, #1e2a36 18%, transparent);
-    --sidebar-ring: #c45c26;
-  }
+
   * {
     @apply border-border;
     outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
   }
-  body {
-    @apply bg-background text-foreground;
-    margin: 0;
+
+  :focus-visible {
+    outline: 2px solid var(--ln-signal);
+    outline-offset: 2px;
   }
+
   html {
     @apply font-sans;
+  }
+
+  html:not(.dark) {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    margin: 0;
+    min-height: 100dvh;
+    background-image:
+      radial-gradient(
+        ellipse 90% 55% at 0% -8%,
+        var(--ln-wash-a),
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 60% 45% at 100% 0%,
+        var(--ln-wash-b),
+        transparent 52%
+      ),
+      radial-gradient(
+        ellipse 70% 40% at 50% 110%,
+        var(--ln-wash-c),
+        transparent 55%
+      ),
+      linear-gradient(
+        165deg,
+        var(--ln-canvas) 0%,
+        var(--ln-canvas-elevated) 55%,
+        var(--ln-canvas) 100%
+      );
+    background-attachment: fixed;
+  }
+
+  /* Light-only: faint ledger grid under planes — depth without clutter */
+  html:not(.dark) body {
+    background-image:
+      linear-gradient(
+        color-mix(in srgb, #111111 4%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, #111111 4%, transparent) 1px,
+        transparent 1px
+      ),
+      radial-gradient(
+        ellipse 90% 55% at 0% -8%,
+        var(--ln-wash-a),
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 60% 45% at 100% 0%,
+        var(--ln-wash-b),
+        transparent 52%
+      ),
+      radial-gradient(
+        ellipse 70% 40% at 50% 110%,
+        var(--ln-wash-c),
+        transparent 55%
+      ),
+      linear-gradient(
+        165deg,
+        var(--ln-canvas) 0%,
+        var(--ln-canvas-elevated) 55%,
+        var(--ln-canvas) 100%
+      );
+    background-size:
+      48px 48px,
+      48px 48px,
+      auto,
+      auto,
+      auto,
+      auto;
+  }
+
+  /*
+   * Compatibility bridges: legacy light-theme utilities → Ledger Noir planes.
+   * Section layouts untouched; contrast stays readable on the dark canvas.
+   */
+  .bg-white {
+    background-color: var(--ln-plane) !important;
+  }
+
+  .bg-white\/50 {
+    background-color: color-mix(in srgb, var(--ln-plane) 70%, transparent) !important;
+  }
+
+  .bg-orange-50 {
+    background-color: var(--ln-warn-dim) !important;
+  }
+
+  /* brand-ink is paper (text); void is the deep fill for former dark CTAs/footer */
+  .bg-brand-ink {
+    background-color: var(--brand-void) !important;
   }
 }

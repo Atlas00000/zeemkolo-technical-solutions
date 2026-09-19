@@ -6,7 +6,7 @@ Where schematics, videos, and digital assets live for Zeemble / Zeemkolo authors
 
 | Asset type | Store as | Reference from |
 | :--- | :--- | :--- |
-| Public lesson schematic / static image | `client/public/schematics/...` | Lesson `schematicKey` = `/schematics/file.svg` |
+| Public lesson schematic / static image | `client/public/schematics/...` | Lesson `schematicKey` = `/schematics/file.jpg` (or `.svg`) |
 | Public marketing image | `client/public/...` | Next.js `<Image>` / `<img src="/...">` |
 | Paid digital product (ebook, firmware pack) | R2 object key | Product `digitalKey` e.g. `ebooks/firmware-handbook.pdf` |
 | Private / large lesson media (future) | R2 key under `lessons/` or `schematics/` | Lesson `schematicKey` / `codeBundleKey` (prefer R2 once public path is insufficient) |
@@ -16,7 +16,7 @@ Where schematics, videos, and digital assets live for Zeemble / Zeemkolo authors
 
 1. Add the file under `client/public/schematics/`.
 2. Set lesson `schematicKey` to the **web path**, starting with `/`  
-   Example: `/schematics/sample-circuit.svg`
+   Example: `/schematics/series-circuit.jpg`
 3. The LMS schematic viewer loads that path from the Next.js origin.
 
 Use public paths only for content that may appear in preview lessons or marketing.
@@ -28,8 +28,11 @@ See `docs/runbooks/r2-storage.md`.
 - Consultation uploads: `consultations/YYYY-MM-DD/...` (API writes these)
 - Store downloads: set `digitalKey` on the product to the R2 object key
 - Upload with helpers: `pnpm r2:put -- ebooks/my-file.pdf ./local.pdf`
+- Lesson media mirror (optional): `pnpm r2:put -- schematics/series-circuit.jpg ./client/public/schematics/series-circuit.jpg`
 
 Do **not** put paid ebook bytes in `client/public/`.
+
+Public LMS preview schematics still load from the Next.js origin (`/schematics/...`). The R2 object is the durable copy for media ops / future private delivery.
 
 ## Authoring lessons (admin)
 

@@ -1,0 +1,129 @@
+/* Porcelain Noir + Connect Blue — dual theme
+ * Brand: blue #0905FB (connectivity, ~70%) · red #DD0340 (marks/names, ~10%)
+ * Gold #F7A100 reserved for social — not used on the site.
+ */
+
+/* ── Light (default :root) — gallery day: graphite field, white planes, blue connect ── */
+:root {
+  color-scheme: light;
+
+  /* Deeper field so white planes lift (was too flat porcelain) */
+  --ln-canvas: #e4e3de;
+  --ln-canvas-elevated: #dad9d3;
+  --ln-plane: #ffffff;
+  --ln-plane-hover: #f6f5f1;
+  --ln-hairline: color-mix(in srgb, #111111 14%, transparent);
+  --ln-hairline-strong: color-mix(in srgb, #111111 22%, transparent);
+
+  --ln-ink: #0a0a0a;
+  --ln-muted: #5a5a56;
+  --ln-faint: #7a7a74;
+
+  /* Connectivity — primary accent (gradients, lines, CTAs, rails) */
+  --ln-signal: #0905fb;
+  --ln-signal-dim: color-mix(in srgb, #0905fb 14%, transparent);
+  --ln-signal-foreground: #ffffff;
+
+  /* Brand mark — names and sparse identity accents only */
+  --ln-mark: #dd0340;
+  --ln-mark-dim: color-mix(in srgb, #dd0340 14%, transparent);
+
+  --ln-warn: #8a5a2b;
+  --ln-warn-dim: color-mix(in srgb, #8a5a2b 16%, transparent);
+  --ln-halt: #8b0000;
+  --ln-halt-dim: color-mix(in srgb, #8b0000 14%, transparent);
+  --ln-skip: #5a5a56;
+
+  --ln-zone-public: var(--ln-faint);
+  --ln-zone-customer: var(--ln-muted);
+  --ln-zone-student: var(--ln-signal);
+  --ln-zone-admin: var(--ln-warn);
+
+  /* Atmosphere — blue bloom + graphite vignette */
+  --ln-wash-a: color-mix(in srgb, #0905fb 12%, transparent);
+  --ln-wash-b: color-mix(in srgb, #111111 10%, transparent);
+  --ln-wash-c: color-mix(in srgb, #0905fb 5%, transparent);
+
+  /* Light elevation — readable depth (dark overrides below) */
+  --ln-shadow-plane: 0 1px 0 color-mix(in srgb, #111111 6%, transparent),
+    0 2px 4px color-mix(in srgb, #111111 5%, transparent),
+    0 16px 40px color-mix(in srgb, #111111 10%, transparent);
+  --ln-shadow-rail: 0 8px 28px color-mix(in srgb, #111111 12%, transparent);
+
+  --background: var(--ln-canvas);
+  --foreground: var(--ln-ink);
+  --card: var(--ln-plane);
+  --card-foreground: var(--ln-ink);
+  --popover: var(--ln-plane);
+  --popover-foreground: var(--ln-ink);
+  --primary: var(--ln-signal);
+  --primary-foreground: var(--ln-signal-foreground);
+  --secondary: var(--ln-canvas-elevated);
+  --secondary-foreground: var(--ln-ink);
+  --muted: var(--ln-plane-hover);
+  --muted-foreground: var(--ln-muted);
+  --accent: var(--ln-signal-dim);
+  --accent-foreground: var(--ln-ink);
+  --destructive: var(--ln-halt);
+  --border: var(--ln-hairline);
+  --input: var(--ln-hairline-strong);
+  --ring: var(--ln-signal);
+  --chart-1: var(--ln-signal);
+  --chart-2: var(--ln-mark);
+  --chart-3: var(--ln-ink);
+  --chart-4: var(--ln-muted);
+  --chart-5: var(--ln-halt);
+  --sidebar: var(--ln-canvas-elevated);
+  --sidebar-foreground: var(--ln-ink);
+  --sidebar-primary: var(--ln-signal);
+  --sidebar-primary-foreground: var(--ln-signal-foreground);
+  --sidebar-accent: var(--ln-plane);
+  --sidebar-accent-foreground: var(--ln-ink);
+  --sidebar-border: var(--ln-hairline);
+  --sidebar-ring: var(--ln-signal);
+
+  --brand-ink: var(--ln-ink);
+  --brand-steel: var(--ln-muted);
+  --brand-signal: var(--ln-signal);
+  --brand-mist: var(--ln-canvas);
+  --brand-void: var(--ln-canvas-elevated);
+}
+
+/* ── Dark ──────────────────────────────────────────────────────────────── */
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ln-canvas: #080808;
+  --ln-canvas-elevated: #0c0c0c;
+  --ln-plane: #111111;
+  --ln-plane-hover: #1a1a1a;
+  --ln-hairline: color-mix(in srgb, #f2f2f0 10%, transparent);
+  --ln-hairline-strong: color-mix(in srgb, #f2f2f0 18%, transparent);
+
+  --ln-ink: #f2f2f0;
+  --ln-muted: #a3a39e;
+  --ln-faint: #6e6e6a;
+
+  /* Lifted blue so lines/gradients read on noir */
+  --ln-signal: #4e4bff;
+  --ln-signal-dim: color-mix(in srgb, #4e4bff 16%, transparent);
+  --ln-signal-foreground: #080808;
+
+  --ln-mark: #dd0340;
+  --ln-mark-dim: color-mix(in srgb, #dd0340 16%, transparent);
+
+  --ln-warn: #c49a6c;
+  --ln-warn-dim: color-mix(in srgb, #c49a6c 16%, transparent);
+  --ln-halt: #ff4d4d;
+  --ln-halt-dim: color-mix(in srgb, #ff4d4d 16%, transparent);
+  --ln-skip: #6e6e6a;
+
+  --ln-wash-a: color-mix(in srgb, #4e4bff 8%, transparent);
+  --ln-wash-b: color-mix(in srgb, #0a0a22 45%, transparent);
+  --ln-wash-c: color-mix(in srgb, #4e4bff 4%, transparent);
+
+  --ln-shadow-plane: 0 1px 0 color-mix(in srgb, #ffffff 4%, transparent),
+    0 12px 40px color-mix(in srgb, #000000 45%, transparent);
+  --ln-shadow-rail: 0 8px 28px color-mix(in srgb, #000000 35%, transparent);
+}

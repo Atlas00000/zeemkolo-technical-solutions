@@ -3,6 +3,13 @@
 import { useState } from "react";
 import type { StoreOrder } from "@/lib/api-client";
 import { requestStoreDownload } from "@/lib/api-client";
+import { Badge } from "@/design/primitives/Badge";
+import { Button } from "@/design/primitives/Button";
+import { Text } from "@/design/primitives/Text";
+import {
+  orderTone,
+  type OrderLifecycle,
+} from "@/design/map/backend-status";
 
 type OrderSuccessCardProps = {
   order: StoreOrder;
@@ -10,6 +17,7 @@ type OrderSuccessCardProps = {
 
 export function OrderSuccessCard({ order }: OrderSuccessCardProps) {
   const [message, setMessage] = useState<string | null>(null);
+  const tone = orderTone(order.status as OrderLifecycle);
 
   async function download(productId: string) {
     setMessage(null);
@@ -23,42 +31,54 @@ export function OrderSuccessCard({ order }: OrderSuccessCardProps) {
   }
 
   return (
-    <div className="border border-brand-steel/15 bg-white p-6">
-      <p className="text-sm tracking-[0.14em] text-brand-signal uppercase">Order confirmed</p>
-      <h1 className="mt-2 font-display text-3xl text-brand-ink">Thank you</h1>
-      <p className="mt-2 text-brand-steel">
-        Status <span className="text-brand-ink">{order.status}</span> ·{" "}
-        {order.total.formatted}
-      </p>
-      <p className="mt-1 text-sm text-brand-steel/70">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <Text variant="eyebrow">Order confirmed</Text>
+        <Badge tone={tone}>{order.status}</Badge>
+      </div>
+      <Text variant="title" className="text-3xl">
+        Thank you
+      </Text>
+      <Text variant="muted">
+        Total{" "}
+        <span className="ln-tabular text-[var(--ln-ink)]">
+          {order.total.formatted}
+        </span>
+      </Text>
+      <Text variant="meta">
         Ref {order.paymentRef} · {order.email}
-      </p>
+      </Text>
 
-      <ul className="mt-6 space-y-2 text-sm text-brand-ink">
+      <ul className="space-y-2 border-t border-[var(--ln-hairline)] pt-4 text-sm text-[var(--ln-ink)]">
         {order.items.map((item) => (
           <li key={item.id}>
-            {item.quantity}× {item.product.title}
+            <span className="ln-tabular">{item.quantity}</span>× {item.product.title}
           </li>
         ))}
       </ul>
 
       {order.downloadsAvailable.length > 0 ? (
-        <div className="mt-6 space-y-2">
-          <p className="text-sm font-medium text-brand-ink">Digital downloads</p>
-          {order.downloadsAvailable.map((d) => (
-            <button
-              key={d.productId}
-              type="button"
-              onClick={() => void download(d.productId)}
-              className="mr-2 border border-brand-steel/25 px-3 py-1.5 text-sm"
-            >
-              Download {d.title}
-            </button>
-          ))}
+        <div className="space-y-2 border-t border-[var(--ln-hairline)] pt-4">
+          <Text variant="meta" className="uppercase tracking-[var(--ln-tracking-mark)]">
+            Digital downloads
+          </Text>
+          <div className="flex flex-wrap gap-2">
+            {order.downloadsAvailable.map((d) => (
+              <Button
+                key={d.productId}
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => void download(d.productId)}
+              >
+                Download {d.title}
+              </Button>
+            ))}
+          </div>
         </div>
       ) : null}
 
-      {message ? <p className="mt-4 text-sm text-brand-steel">{message}</p> : null}
+      {message ? <Text variant="muted">{message}</Text> : null}
     </div>
   );
 }

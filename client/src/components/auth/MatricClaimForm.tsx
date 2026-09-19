@@ -3,16 +3,24 @@
 import { FormEvent, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { claimMatric } from "@/lib/api-client";
+import { Button } from "@/design/primitives/Button";
+import { Input } from "@/design/primitives/Input";
+import { Text } from "@/design/primitives/Text";
 
 type MatricClaimFormProps = {
   onSuccess?: (code: string) => void;
   initialCode?: string;
 };
 
-export function MatricClaimForm({ onSuccess, initialCode = "" }: MatricClaimFormProps) {
+export function MatricClaimForm({
+  onSuccess,
+  initialCode = "",
+}: MatricClaimFormProps) {
   const { getToken } = useAuth();
   const [code, setCode] = useState(initialCode);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
+    "idle",
+  );
   const [message, setMessage] = useState<string | null>(null);
 
   const normalized = code.trim().toUpperCase();
@@ -41,35 +49,45 @@ export function MatricClaimForm({ onSuccess, initialCode = "" }: MatricClaimForm
   return (
     <form onSubmit={onSubmit} className="w-full max-w-md space-y-4">
       <label className="block">
-        <span className="text-sm font-medium text-brand-steel">Zeemble matric number</span>
-        <input
+        <Text variant="meta" as="span" className="font-medium text-[var(--ln-muted)]">
+          Zeemble matric number
+        </Text>
+        <Input
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="ZMB-2026-001"
-          className="mt-2 w-full border border-brand-steel/20 bg-white px-3 py-2 text-brand-ink outline-none focus:border-brand-signal"
+          className="mt-2 ln-tabular"
           autoComplete="off"
           required
         />
       </label>
 
-      <p className="text-sm text-brand-steel/70">
+      <Text variant="meta">
         Format check:{" "}
-        <span className={looksValid ? "text-green-700" : "text-brand-signal"}>
+        <span
+          className={
+            looksValid ? "text-[var(--ln-signal)]" : "text-[var(--ln-warn)]"
+          }
+        >
           {looksValid ? "Valid pattern" : "Expected ZMB-YYYY-NNN"}
         </span>
-      </p>
+      </Text>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "loading" || !looksValid}
-        className="w-full bg-brand-ink px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+        className="w-full"
       >
         {status === "loading" ? "Claiming…" : "Claim matric & unlock Zeemble"}
-      </button>
+      </Button>
 
       {message ? (
         <p
-          className={`text-sm ${status === "error" ? "text-red-700" : "text-green-800"}`}
+          className={`text-sm ${
+            status === "error"
+              ? "text-[var(--ln-halt)]"
+              : "text-[var(--ln-signal)]"
+          }`}
           role="status"
         >
           {message}

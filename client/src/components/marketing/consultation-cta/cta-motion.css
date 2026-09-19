@@ -1,0 +1,145 @@
+/* Consultation CTA close motion */
+
+@keyframes cta-scope {
+  0% {
+    top: 15%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.7;
+  }
+  88% {
+    opacity: 0.7;
+  }
+  100% {
+    top: 85%;
+    opacity: 0;
+  }
+}
+
+@keyframes cta-scan {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+@keyframes cta-detail {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cta-signal-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes cta-mark-draw {
+  from {
+    stroke-dashoffset: 240;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes cta-mark-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.cta-scope {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--ln-signal) 40%, transparent),
+    var(--ln-signal),
+    color-mix(in srgb, var(--ln-signal) 40%, transparent),
+    transparent
+  );
+  animation: cta-scope 7.5s linear infinite;
+}
+
+.cta-step-scan {
+  animation: cta-scan 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cta-step-detail {
+  animation: cta-detail 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cta-signal-enter {
+  animation: cta-signal-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cta-mark-draw {
+  stroke-dasharray: 240;
+  animation: cta-mark-draw 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cta-mark-pulse {
+  animation: cta-mark-pulse 1.8s ease-in-out infinite;
+}
+
+.cta-step-active {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ln-signal) 8%, transparent) 0%,
+    transparent 50%
+  );
+}
+
+.cta-primary {
+  transition: box-shadow 280ms ease, transform 150ms ease, background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.cta-primary:hover {
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-scope,
+  .cta-step-scan,
+  .cta-step-detail,
+  .cta-signal-enter,
+  .cta-mark-draw,
+  .cta-mark-pulse {
+    animation: none;
+  }
+
+  .cta-step-detail,
+  .cta-signal-enter {
+    opacity: 1;
+    transform: none;
+  }
+
+  .cta-mark-draw {
+    stroke-dashoffset: 0;
+  }
+
+  .cta-magnetic {
+    transform: none !important;
+  }
+}

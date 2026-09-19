@@ -1,31 +1,65 @@
 import Link from "next/link";
 
+/**
+ * UI-A01 / W5 — Admin chrome: denser Ledger Noir desk (ops, not marketing).
+ */
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#f3f6f4_0%,_#e8eee9_45%,_#dfe6e1_100%)]">
-      <header className="border-b border-brand-steel/15 bg-brand-mist/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
+    <div
+      className="min-h-screen bg-[var(--ln-canvas)] text-[var(--ln-ink)]"
+      data-admin-desk
+    >
+      <a
+        href="#admin-main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-[var(--ln-signal)] focus:px-3 focus:py-2 focus:text-[var(--ln-signal-foreground)]"
+      >
+        Skip to admin content
+      </a>
+      <header className="sticky top-0 z-20 border-b border-[var(--ln-hairline)] bg-[color-mix(in_srgb,var(--ln-canvas)_92%,transparent)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-shell items-center justify-between gap-4 border-l-2 border-l-[var(--ln-signal)] px-[var(--ln-page-x)] py-4 pl-[calc(var(--ln-page-x)+2px)]">
           <div>
-            <p className="font-display text-xs tracking-[0.22em] text-brand-signal uppercase">
+            <p className="font-display text-xs tracking-[0.22em] text-[var(--ln-signal)] uppercase">
               Zeemkolo
             </p>
-            <p className="font-display text-lg text-brand-ink">Admin</p>
+            <p className="font-display text-lg text-[var(--ln-ink)]">
+              Admin desk
+            </p>
           </div>
-          <nav className="flex flex-wrap items-center gap-4 text-sm text-brand-steel">
-            <Link href="/admin" className="hover:text-brand-ink">
+          <nav
+            className="flex flex-wrap items-center gap-4 text-sm text-[var(--ln-muted)]"
+            aria-label="Admin chrome"
+          >
+            <Link
+              href="/admin"
+              className="border-b border-transparent pb-0.5 hover:border-[var(--ln-signal)] hover:text-[var(--ln-ink)]"
+            >
               Dashboard
             </Link>
-            <Link href="/" className="hover:text-brand-ink">
+            <Link
+              href="/ui"
+              className="border-b border-transparent pb-0.5 hover:border-[var(--ln-signal)] hover:text-[var(--ln-ink)]"
+            >
+              UI system
+            </Link>
+            <Link
+              href="/"
+              className="border-b border-transparent pb-0.5 hover:border-[var(--ln-signal)] hover:text-[var(--ln-ink)]"
+            >
               Site
             </Link>
           </nav>
         </div>
       </header>
-      <div className="mx-auto max-w-6xl px-6 py-10">{children}</div>
+      <div
+        id="admin-main"
+        className="mx-auto max-w-shell px-[var(--ln-page-x)] py-10"
+      >
+        {children}
+      </div>
     </div>
   );
 }

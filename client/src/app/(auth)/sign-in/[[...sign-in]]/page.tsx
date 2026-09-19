@@ -1,20 +1,30 @@
 import { SignIn } from "@clerk/nextjs";
+import { AuthEntryField } from "@/components/auth/AuthEntryField";
+import { Text } from "@/design/primitives/Text";
 
 export default function SignInPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-16">
-      <p className="mb-6 font-display text-sm tracking-[0.2em] text-brand-signal uppercase">
-        Zeemkolo
-      </p>
-      <SignIn
-        appearance={{
-          elements: {
-            rootBox: "w-full",
-            card: "shadow-none border border-brand-steel/15",
-          },
-        }}
-        forceRedirectUrl="/claim-matric"
-      />
+    <main className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden px-[var(--ln-page-x)] py-16">
+      <AuthEntryField word="SIGN IN" />
+      <div className="relative z-10 mx-auto flex w-full max-w-lg flex-col items-center">
+        <Text variant="eyebrow" className="mb-6">
+          Zeemkolo
+        </Text>
+        <div
+          className="w-full border-t border-[var(--ln-signal)] pt-8"
+          data-auth-stage
+        >
+          <SignIn
+            appearance={{
+              elements: {
+                rootBox: "w-full",
+                card: "shadow-none border border-[var(--ln-hairline)] bg-[var(--ln-plane)]",
+              },
+            }}
+            forceRedirectUrl="/claim-matric"
+          />
+        </div>
+      </div>
     </main>
   );
 }

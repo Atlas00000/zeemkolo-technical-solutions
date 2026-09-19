@@ -46,6 +46,10 @@ const envSchema = z.object({
     .optional()
     .default("false")
     .transform((v) => ["1", "true", "yes", "on"].includes(v.toLowerCase())),
+  /** Pino log level for Fastify (default info). */
+  LOG_LEVEL: z
+    .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
+    .default("info"),
 });
 
 export const env = envSchema.parse(process.env);

@@ -5,16 +5,26 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createForumThread } from "@/lib/api-client";
 import { EnrollBanner } from "@/components/forum/EnrollBanner";
+import { Button } from "@/design/primitives/Button";
+import { Input } from "@/design/primitives/Input";
 
 type NewThreadFormProps = {
   categories: { slug: string; title: string }[];
   canWrite: boolean;
 };
 
+const fieldClass =
+  "mt-2 w-full border-0 border-b border-[var(--ln-hairline-strong)] bg-transparent px-0 py-2 text-sm text-[var(--ln-ink)] outline-none transition-colors focus:border-[var(--ln-signal)]";
+
+/**
+ * New thread composer — open plane, hairline fields. No Surface box.
+ */
 export function NewThreadForm({ categories, canWrite }: NewThreadFormProps) {
   const { getToken } = useAuth();
   const router = useRouter();
-  const [categorySlug, setCategorySlug] = useState(categories[0]?.slug ?? "general");
+  const [categorySlug, setCategorySlug] = useState(
+    categories[0]?.slug ?? "general",
+  );
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
@@ -33,7 +43,10 @@ export function NewThreadForm({ categories, canWrite }: NewThreadFormProps) {
     try {
       const token = await getToken();
       if (!token) throw new Error("Sign in required");
-      const created = await createForumThread({ categorySlug, title, body }, token);
+      const created = await createForumThread(
+        { categorySlug, title, body },
+        token,
+      );
       router.push(`/forum/threads/${created.id}`);
       router.refresh();
     } catch (err) {
@@ -44,14 +57,21 @@ export function NewThreadForm({ categories, canWrite }: NewThreadFormProps) {
   }
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} className="space-y-4 border border-brand-steel/15 p-4">
-      <h2 className="font-display text-xl text-brand-ink">New thread</h2>
-      <label className="block text-sm text-brand-steel">
+    <form
+      onSubmit={(e) => void onSubmit(e)}
+      className="space-y-6 border-t border-[var(--ln-signal)] pt-6"
+      data-forum-new-thread
+    >
+      <h3 className="font-display text-xl tracking-tight text-[var(--ln-ink)] md:text-2xl">
+        New thread
+      </h3>
+
+      <label className="block font-mono text-[10px] tracking-[0.16em] text-[var(--ln-faint)] uppercase">
         Category
         <select
           value={categorySlug}
           onChange={(e) => setCategorySlug(e.target.value)}
-          className="mt-1 w-full border border-brand-steel/25 bg-white px-3 py-2 text-brand-ink"
+          className={`${fieldClass} font-display text-base tracking-normal text-[var(--ln-ink)] normal-case`}
         >
           {categories.map((c) => (
             <option key={c.slug} value={c.slug}>
@@ -60,17 +80,19 @@ export function NewThreadForm({ categories, canWrite }: NewThreadFormProps) {
           ))}
         </select>
       </label>
-      <label className="block text-sm text-brand-steel">
+
+      <label className="block font-mono text-[10px] tracking-[0.16em] text-[var(--ln-faint)] uppercase">
         Title
-        <input
+        <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           minLength={3}
-          className="mt-1 w-full border border-brand-steel/25 bg-white px-3 py-2 text-brand-ink"
+          className="mt-2 border-0 border-b border-[var(--ln-hairline-strong)] bg-transparent px-0 shadow-none focus-visible:ring-0"
         />
       </label>
-      <label className="block text-sm text-brand-steel">
+
+      <label className="block font-mono text-[10px] tracking-[0.16em] text-[var(--ln-faint)] uppercase">
         Body
         <textarea
           value={body}
@@ -78,17 +100,19 @@ export function NewThreadForm({ categories, canWrite }: NewThreadFormProps) {
           required
           minLength={10}
           rows={5}
-          className="mt-1 w-full border border-brand-steel/25 bg-white px-3 py-2 text-brand-ink"
+          className={fieldClass}
         />
       </label>
-      {error ? <p className="text-sm text-brand-signal">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={busy}
-        className="bg-brand-ink px-4 py-2 text-sm text-white disabled:opacity-50"
-      >
+
+      {error ? (
+        <p className="text-sm text-[var(--ln-halt)]" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      <Button type="submit" disabled={busy}>
         {busy ? "Publishing…" : "Publish thread"}
-      </button>
+      </Button>
     </form>
   );
 }

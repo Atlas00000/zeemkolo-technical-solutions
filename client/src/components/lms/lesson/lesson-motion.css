@@ -1,0 +1,67 @@
+/* Lesson desk motion — rail scan + stage enter. No zip sweeps. */
+
+@keyframes lesson-scan {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+@keyframes lesson-stage-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes lesson-progress-fill {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+.lesson-rail-scan {
+  animation: lesson-scan 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lesson-stage-enter {
+  animation: lesson-stage-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lesson-progress-fill {
+  animation: lesson-progress-fill 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lesson-rail-active {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ln-signal) 12%, transparent) 0%,
+    transparent 60%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-rail-scan,
+  .lesson-stage-enter,
+  .lesson-progress-fill {
+    animation: none;
+  }
+
+  .lesson-stage-enter {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,126 +1,100 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  fetchStoreProducts,
-  type StoreProduct,
-} from "@/lib/api-client";
-import { useCart } from "@/hooks/useCart";
-import { ProductCard } from "@/components/store/ProductCard";
-import { CartDrawer } from "@/components/store/CartDrawer";
+import type { PointerEvent } from "react";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
 } from "@/components/feedback/UiState";
-import { Button } from "@/components/ui/button";
+import {
+  StoreCart,
+  StoreDeskProvider,
+  StoreField,
+  StoreMasthead,
+  StoreRail,
+  StoreStage,
+  StoreToolbar,
+  useStoreDesk,
+} from "./desk";
+import "./desk/store-motion.css";
 
-export function StoreCatalog() {
-  const [currency, setCurrency] = useState<"NGN" | "USD">("NGN");
-  const [products, setProducts] = useState<StoreProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [cartOpen, setCartOpen] = useState(false);
-  const cart = useCart();
+function StoreCatalogInner() {
+  const {
+    loading,
+    error,
+    product,
+    products,
+    setPointer,
+    reducedMotion,
+  } = useStoreDesk();
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await fetchStoreProducts(currency);
-        if (!cancelled) {
-          setProducts(data.products);
-          setError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load products");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [currency]);
+  function onPointerMove(e: PointerEvent<HTMLElement>) {
+    if (reducedMotion) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPointer({
+      x: Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)),
+      y: Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)),
+      active: true,
+    });
+  }
+
+  function onPointerLeave() {
+    setPointer({ x: 0.72, y: 0.3, active: false });
+  }
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2" role="group" aria-label="Currency">
-          <Button
-            type="button"
-            size="sm"
-            variant={currency === "NGN" ? "default" : "outline"}
-            aria-pressed={currency === "NGN"}
-            onClick={() => setCurrency("NGN")}
-          >
-            NGN
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={currency === "USD" ? "default" : "outline"}
-            aria-pressed={currency === "USD"}
-            onClick={() => setCurrency("USD")}
-          >
-            USD
-          </Button>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setCartOpen(true)}
-          aria-haspopup="dialog"
-        >
-          Cart ({cart.count})
-        </Button>
-      </div>
+    <section
+      className="relative isolate overflow-hidden text-[var(--ln-ink)]"
+      data-store-desk
+      aria-label="Zeemkolo store"
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
+    >
+      <StoreField />
 
-      {loading ? <LoadingState label="Loading catalog…" /> : null}
-      {!loading && error ? <ErrorState message={error} /> : null}
-      {!loading && !error && products.length === 0 ? (
-        <EmptyState
-          title="No products yet"
-          description="Published store items will appear here."
-        />
-      ) : null}
+      <div className="relative z-10 mx-auto max-w-shell px-[var(--ln-page-x)] py-16 md:py-24">
+        <StoreMasthead />
+        <StoreToolbar />
 
-      {!loading && !error ? (
-        <div className="mt-4">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              currency={currency}
-              onAdd={(p) => {
-                cart.addItem({
-                  productId: p.id,
-                  slug: p.slug,
-                  title: p.title,
-                  type: p.type,
-                  unitPriceNgn: p.priceNgn.amountMinor,
-                  unitPriceUsd: p.priceUsd.amountMinor,
-                });
-                setCartOpen(true);
-              }}
+        {loading ? (
+          <div className="mt-12">
+            <LoadingState label="Loading catalog…" />
+          </div>
+        ) : null}
+        {!loading && error ? (
+          <div className="mt-12">
+            <ErrorState message={error} />
+          </div>
+        ) : null}
+        {!loading && !error && products.length === 0 ? (
+          <div className="mt-12">
+            <EmptyState
+              title="No products yet"
+              description="Published store items will appear here."
             />
-          ))}
-        </div>
-      ) : null}
+          </div>
+        ) : null}
 
-      <CartDrawer
-        open={cartOpen}
-        onClose={() => setCartOpen(false)}
-        items={cart.items}
-        currency={currency}
-        onQuantity={cart.setQuantity}
-        onRemove={cart.removeItem}
-      />
-    </div>
+        {!loading && !error && product ? (
+          <div className="mt-12 flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16">
+            <StoreRail />
+            <StoreStage />
+          </div>
+        ) : null}
+
+        <StoreCart />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Zeemkolo store catalog — Field / Masthead / Toolbar / Rail / Stage / Cart.
+ */
+export function StoreCatalog() {
+  return (
+    <StoreDeskProvider>
+      <StoreCatalogInner />
+    </StoreDeskProvider>
   );
 }

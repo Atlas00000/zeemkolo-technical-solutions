@@ -1,10 +1,14 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { EmptyState as LnEmptyState } from "@/design/patterns/EmptyState";
+import { SkeletonLine } from "@/design/patterns/Skeleton";
 
 export function LoadingState({ label = "Loading…" }: { label?: string }) {
   return (
-    <p className="mt-8 text-sm text-muted-foreground" role="status" aria-live="polite">
-      {label}
-    </p>
+    <div className="mt-8 space-y-3" role="status" aria-live="polite">
+      <SkeletonLine className="w-40" />
+      <SkeletonLine className="w-64" />
+      <p className="text-sm text-[var(--ln-muted)]">{label}</p>
+    </div>
   );
 }
 
@@ -16,12 +20,11 @@ export function EmptyState({
   description?: string;
 }) {
   return (
-    <div className="mt-8 border-t border-border pt-6" role="status">
-      <p className="font-display text-xl text-foreground">{title}</p>
-      {description ? (
-        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-      ) : null}
-    </div>
+    <LnEmptyState
+      className="mt-8"
+      title={title}
+      description={description}
+    />
   );
 }
 

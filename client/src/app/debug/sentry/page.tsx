@@ -23,7 +23,7 @@ export default function DebugSentryPage() {
   return (
     <main className="mx-auto max-w-lg px-6 py-16">
       <h1 className="font-display text-2xl">Sentry client test</h1>
-      <p className="mt-3 text-sm text-brand-steel/80">
+      <p className="mt-3 text-sm text-[var(--ln-muted)]">
         Fired a test exception if <code>NEXT_PUBLIC_SENTRY_DSN</code> is set.
         Check your Sentry project Issues feed.
       </p>

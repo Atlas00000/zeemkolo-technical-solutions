@@ -1,0 +1,177 @@
+/* Booking masthead motion */
+
+@keyframes masthead-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes masthead-rule-draw {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+@keyframes masthead-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ln-signal) 55%, transparent);
+    opacity: 1;
+  }
+  55% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--ln-signal) 0%, transparent);
+    opacity: 0.75;
+  }
+}
+
+@keyframes masthead-scan {
+  from {
+    transform: translateX(-20%);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+@keyframes masthead-meta-swap {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.masthead-enter {
+  animation: masthead-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.masthead-enter-delay-1 {
+  animation: masthead-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 70ms;
+}
+
+.masthead-enter-delay-2 {
+  animation: masthead-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 140ms;
+}
+
+.masthead-enter-delay-3 {
+  animation: masthead-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 210ms;
+}
+
+.masthead-enter-delay-4 {
+  animation: masthead-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 280ms;
+}
+
+.masthead-rule {
+  position: relative;
+  height: 2px;
+  width: min(11rem, 40vw);
+  background: var(--ln-signal);
+  animation: masthead-rule-draw 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 120ms;
+}
+
+.masthead-rule::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, #ffffff 70%, transparent),
+    transparent
+  );
+  animation: masthead-scan 2.8s ease-in-out infinite;
+  animation-delay: 800ms;
+}
+
+.masthead-pulse-dot {
+  animation: masthead-pulse 2.2s ease-out infinite;
+}
+
+.masthead-meta-swap {
+  animation: masthead-meta-swap 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.masthead-title-accent {
+  background: linear-gradient(
+    105deg,
+    var(--ln-ink) 0%,
+    var(--ln-ink) 42%,
+    var(--ln-signal) 52%,
+    var(--ln-ink) 62%,
+    var(--ln-ink) 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: masthead-sheen 7s ease-in-out infinite;
+}
+
+@keyframes masthead-sheen {
+  0%,
+  100% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .masthead-enter,
+  .masthead-enter-delay-1,
+  .masthead-enter-delay-2,
+  .masthead-enter-delay-3,
+  .masthead-enter-delay-4,
+  .masthead-rule,
+  .masthead-rule::after,
+  .masthead-pulse-dot,
+  .masthead-meta-swap,
+  .masthead-title-accent {
+    animation: none;
+  }
+
+  .masthead-enter,
+  .masthead-enter-delay-1,
+  .masthead-enter-delay-2,
+  .masthead-enter-delay-3,
+  .masthead-enter-delay-4,
+  .masthead-meta-swap {
+    opacity: 1;
+    transform: none;
+  }
+
+  .masthead-rule {
+    transform: none;
+  }
+
+  .masthead-title-accent {
+    background: none;
+    color: var(--ln-ink);
+    -webkit-background-clip: unset;
+    background-clip: unset;
+  }
+}

@@ -38,6 +38,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@esbuild/win32-x64": "0.28.2",
     "@playwright/test": "^1.63.0",
     "wrangler": "^3.114.15"
   }

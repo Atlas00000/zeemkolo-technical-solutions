@@ -5,27 +5,36 @@ const links = [
   { href: "/zeemble", label: "Zeemble" },
   { href: "/store", label: "Store" },
   { href: "/forum", label: "Forum" },
+  { href: "/ui", label: "UI system" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
   { href: "/sign-in", label: "Sign in" },
 ];
 
-/** Shared site footer (O6.1 / O6.6). */
+/** Shared site footer — Ledger Noir elevated void + hairline. */
 export function SiteFooter() {
   return (
-    <footer className="bg-brand-ink px-6 py-12 text-white/70">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="font-display text-lg text-white">
-            Zeemkolo Technical Solutions
+    <footer className="mt-auto border-t border-[var(--ln-hairline)] bg-[var(--ln-canvas-elevated)] px-[var(--ln-page-x)] py-12 text-[var(--ln-muted)]">
+      <div className="mx-auto flex max-w-shell flex-col gap-8 md:flex-row md:items-end md:justify-between">
+        <div className="max-w-lg">
+          <p className="font-display text-lg tracking-tight text-[var(--ln-ink)]">
+            Zeemkolo
+            <span className="text-[var(--ln-signal)]"> · </span>
+            Technical Solutions
           </p>
-          <p className="mt-1 text-sm">
-            zeemkolo.com · Engineering & Zeemble Program
+          <p className="mt-2 text-pretty text-sm leading-relaxed">
+            Executive engineering OS for product consulting, hardware and
+            firmware engagements, and the Zeemble Program — lab learning gated
+            by matric for verified students.
           </p>
         </div>
-        <div className="flex flex-wrap gap-4 text-sm">
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-white">
+            <Link
+              key={link.href}
+              href={link.href}
+              className="border-b border-transparent transition-colors hover:border-[var(--ln-signal)] hover:text-[var(--ln-ink)]"
+            >
               {link.label}
             </Link>
           ))}

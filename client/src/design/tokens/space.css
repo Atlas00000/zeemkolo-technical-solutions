@@ -1,0 +1,25 @@
+/* Ledger Noir — spacing scale */
+:root {
+  --ln-space-0: 0;
+  --ln-space-1: 0.25rem; /* 4 */
+  --ln-space-2: 0.5rem; /* 8 */
+  --ln-space-3: 0.75rem; /* 12 */
+  --ln-space-4: 1rem; /* 16 */
+  --ln-space-5: 1.5rem; /* 24 */
+  --ln-space-6: 2rem; /* 32 */
+  --ln-space-7: 3rem; /* 48 */
+  --ln-space-8: 4rem; /* 64 */
+  --ln-space-9: 6rem; /* 96 */
+
+  /* Gutters breathe a bit more on wide viewports */
+  --ln-page-x: clamp(1.25rem, 4vw, 3rem);
+  /* Mobile/tablet: fill the padded viewport; desktop: ~75% screen */
+  --ln-page-max: 100%;
+  --ln-rail-width: 13.5rem;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --ln-page-max: 75vw;
+  }
+}

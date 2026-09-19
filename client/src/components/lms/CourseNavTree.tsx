@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/design/primitives/Badge";
+import { gateTone } from "@/design/map/backend-status";
 
 type NavLesson = {
   id: string;
@@ -31,32 +34,36 @@ export function CourseNavTree({
     <nav className="space-y-5 text-sm">
       {modules.map((mod) => (
         <div key={mod.id}>
-          <p className="mb-2 font-medium text-brand-ink">{mod.title}</p>
-          <ul className="space-y-1 border-l border-brand-steel/20 pl-3">
+          <p className="mb-2 font-medium text-[var(--ln-ink)]">{mod.title}</p>
+          <ul className="space-y-1 border-l border-[var(--ln-hairline)] pl-3">
             {mod.lessons.map((lesson) => {
               const active = lesson.slug === activeLessonSlug;
               return (
                 <li key={lesson.id}>
                   <Link
                     href={`/zeemble/courses/${courseSlug}/${lesson.slug}`}
-                    className={`flex items-start gap-2 py-1 ${
+                    className={cn(
+                      "flex items-start gap-2 py-1 transition-colors",
                       active
-                        ? "text-brand-signal"
-                        : "text-brand-steel hover:text-brand-ink"
-                    }`}
+                        ? "text-[var(--ln-signal)]"
+                        : "text-[var(--ln-muted)] hover:text-[var(--ln-ink)]",
+                    )}
                   >
                     <span
-                      className={`mt-1 inline-block h-2.5 w-2.5 shrink-0 border ${
+                      className={cn(
+                        "mt-1 inline-block h-2.5 w-2.5 shrink-0 border",
                         lesson.completed
-                          ? "border-brand-signal bg-brand-signal"
-                          : "border-brand-steel/40"
-                      }`}
+                          ? "border-[var(--ln-signal)] bg-[var(--ln-signal)]"
+                          : "border-[var(--ln-hairline-strong)]",
+                      )}
                       aria-hidden
                     />
                     <span>
                       {lesson.title}
                       {lesson.isPreview ? (
-                        <span className="ml-1 text-xs text-brand-steel/70">(preview)</span>
+                        <Badge tone={gateTone("allow")} className="ml-2 align-middle">
+                          preview
+                        </Badge>
                       ) : null}
                     </span>
                   </Link>

@@ -1,0 +1,51 @@
+/* Zeemble library — rail scan + stage enter. No zip sweep. */
+
+@keyframes library-scan {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+@keyframes library-stage-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(14px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.library-rail-scan {
+  animation: library-scan 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.library-stage-enter {
+  animation: library-stage-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.library-rail-active {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ln-signal) 12%, transparent) 0%,
+    transparent 55%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-rail-scan,
+  .library-stage-enter {
+    animation: none;
+  }
+
+  .library-stage-enter {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,0 +1,71 @@
+/* Ledger Noir — motion grammar */
+:root {
+  --ln-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ln-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --ln-duration-fast: 160ms;
+  --ln-duration-base: 280ms;
+  --ln-duration-enter: 400ms;
+  --ln-duration-tick: 260ms;
+}
+
+@keyframes ln-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ln-state-flash {
+  0% {
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+  40% {
+    box-shadow: inset 0 0 0 1px var(--ln-signal);
+  }
+  100% {
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+}
+
+@keyframes ln-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.ln-page-enter {
+  animation: ln-page-enter var(--ln-duration-enter) var(--ln-ease-out) both;
+}
+
+.ln-page-enter-delay-1 {
+  animation: ln-page-enter var(--ln-duration-enter) var(--ln-ease-out) 60ms both;
+}
+
+.ln-page-enter-delay-2 {
+  animation: ln-page-enter var(--ln-duration-enter) var(--ln-ease-out) 120ms both;
+}
+
+.ln-page-enter-delay-3 {
+  animation: ln-page-enter var(--ln-duration-enter) var(--ln-ease-out) 180ms both;
+}
+
+.ln-state-flash {
+  animation: ln-state-flash var(--ln-duration-base) var(--ln-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ln-page-enter,
+  .ln-page-enter-delay-1,
+  .ln-page-enter-delay-2,
+  .ln-page-enter-delay-3,
+  .ln-state-flash {
+    animation: none;
+  }
+}

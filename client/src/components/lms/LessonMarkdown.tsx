@@ -112,7 +112,10 @@ function renderInline(text: string) {
   return parts.map((part, index) => {
     if (part.startsWith("`") && part.endsWith("`")) {
       return (
-        <code key={index} className="bg-brand-mist px-1 py-0.5 font-mono text-sm">
+        <code
+          key={index}
+          className="bg-[var(--ln-plane)] px-1 py-0.5 font-mono text-sm text-[var(--ln-signal)]"
+        >
           {part.slice(1, -1)}
         </code>
       );
@@ -128,25 +131,25 @@ export function LessonMarkdown({ markdown, gated }: LessonMarkdownProps) {
   const blocks = useMemo(() => parseMarkdown(markdown), [markdown]);
 
   return (
-    <div className="space-y-4 text-brand-ink">
+    <div className="space-y-4 text-[var(--ln-ink)]">
       {blocks.map((block, index) => {
         if (block.type === "heading") {
           if (block.level === 1) {
             return (
-              <h1 key={index} className="font-display text-3xl">
+              <h1 key={index} className="font-display text-3xl tracking-tight">
                 {block.text}
               </h1>
             );
           }
           if (block.level === 2) {
             return (
-              <h2 key={index} className="font-display text-2xl">
+              <h2 key={index} className="font-display text-2xl tracking-tight">
                 {block.text}
               </h2>
             );
           }
           return (
-            <h3 key={index} className="font-display text-xl">
+            <h3 key={index} className="font-display text-xl tracking-tight">
               {block.text}
             </h3>
           );
@@ -154,7 +157,7 @@ export function LessonMarkdown({ markdown, gated }: LessonMarkdownProps) {
 
         if (block.type === "paragraph") {
           return (
-            <p key={index} className="leading-relaxed text-brand-steel">
+            <p key={index} className="leading-relaxed text-[var(--ln-muted)]">
               {renderInline(block.text)}
             </p>
           );
@@ -162,7 +165,7 @@ export function LessonMarkdown({ markdown, gated }: LessonMarkdownProps) {
 
         if (block.type === "list") {
           return (
-            <ul key={index} className="list-disc space-y-1 pl-5 text-brand-steel">
+            <ul className="list-disc space-y-1 pl-5 text-[var(--ln-muted)]" key={index}>
               {block.items.map((item) => (
                 <li key={item}>{renderInline(item)}</li>
               ))}
@@ -186,16 +189,19 @@ export function LessonMarkdown({ markdown, gated }: LessonMarkdownProps) {
         return (
           <div
             key={index}
-            className="overflow-x-auto border border-brand-steel/15 bg-white px-4 py-3 text-brand-ink"
+            className="overflow-x-auto border border-[var(--ln-hairline)] bg-[var(--ln-plane)] px-4 py-3 text-[var(--ln-ink)]"
             dangerouslySetInnerHTML={{ __html: html }}
           />
         );
       })}
 
       {gated ? (
-        <div className="rounded border border-brand-signal/40 bg-orange-50 px-4 py-4 text-sm text-brand-ink">
+        <div className="border border-[color-mix(in_srgb,var(--ln-warn)_45%,transparent)] bg-[var(--ln-warn-dim)] px-4 py-4 text-sm text-[var(--ln-ink)]">
           Full lesson content is available to Zeemble students.{" "}
-          <a href="/sign-up" className="underline underline-offset-2">
+          <a
+            href="/sign-up"
+            className="text-[var(--ln-signal)] underline underline-offset-2"
+          >
             Sign up
           </a>{" "}
           to unlock the library.

@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 export type AppUser = {
@@ -23,10 +25,20 @@ async function apiFetch<T>(
   const method = (rest.method ?? "GET").toUpperCase();
   const isPublicGet = method === "GET" && !token;
 
+  const incoming =
+    headers && typeof headers === "object" && !Array.isArray(headers)
+      ? (headers as Record<string, string>)
+      : {};
+  const requestId =
+    incoming["X-Request-Id"] ??
+    incoming["x-request-id"] ??
+    crypto.randomUUID();
+
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
     headers: {
       "Content-Type": "application/json",
+      "X-Request-Id": requestId,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
@@ -49,7 +61,16 @@ async function apiFetch<T>(
       typeof data.message === "string"
         ? data.message
         : data.error ?? `Request failed (${response.status})`;
-    throw new Error(message);
+    const meta = { path, status: response.status, requestId };
+    if (response.status >= 500) {
+      logger.error("apiFetch failed", meta);
+    } else {
+      logger.warn("apiFetch failed", meta);
+    }
+    const err = new Error(message) as Error & { requestId?: string; status?: number };
+    err.requestId = requestId;
+    err.status = response.status;
+    throw err;
   }
 
   return data;

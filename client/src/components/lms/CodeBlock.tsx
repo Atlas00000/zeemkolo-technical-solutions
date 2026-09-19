@@ -30,7 +30,7 @@ export function CodeBlock({ code, language = "text", filename }: CodeBlockProps)
   const label = useMemo(() => language.toUpperCase(), [language]);
 
   return (
-    <div className="overflow-hidden border border-brand-steel/20 bg-[#0f1720] text-[#e8eef2]">
+    <div className="overflow-hidden border border-[var(--ln-hairline)] bg-[var(--ln-canvas-elevated)] text-[var(--ln-ink)]">
       <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs">
         <span className="tracking-[0.12em] text-white/70">{label}</span>
         <div className="flex gap-2">

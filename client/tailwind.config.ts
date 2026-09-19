@@ -7,10 +7,23 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          ink: "#0f1720",
-          steel: "#1e2a36",
-          signal: "#c45c26",
-          mist: "#e8eef2",
+          /* Legacy names → Ledger Noir aliases */
+          ink: "var(--brand-ink)",
+          steel: "var(--brand-steel)",
+          signal: "var(--brand-signal)",
+          mist: "var(--brand-mist)",
+          void: "var(--brand-void)",
+        },
+        ln: {
+          canvas: "var(--ln-canvas)",
+          plane: "var(--ln-plane)",
+          ink: "var(--ln-ink)",
+          muted: "var(--ln-muted)",
+          signal: "var(--ln-signal)",
+          mark: "var(--ln-mark)",
+          warn: "var(--ln-warn)",
+          halt: "var(--ln-halt)",
+          skip: "var(--ln-skip)",
         },
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -48,17 +61,31 @@ const config: Config = {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius))",
+        sm: "var(--radius)",
         "4xl": "2rem",
       },
       ringWidth: {
         3: "3px",
       },
       fontFamily: {
-        display: ["var(--font-display)", "Georgia", "serif"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        heading: ["var(--font-display)", "Georgia", "serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        heading: ["var(--font-display)", "system-ui", "sans-serif"],
+      },
+      maxWidth: {
+        shell: "var(--ln-page-max)",
+      },
+      keyframes: {
+        "ln-skeleton-shimmer": {
+          "0%": { backgroundPosition: "100% 0" },
+          "100%": { backgroundPosition: "-100% 0" },
+        },
+      },
+      animation: {
+        "ln-skeleton-shimmer":
+          "ln-skeleton-shimmer 1.4s ease-in-out infinite",
       },
     },
   },

@@ -1,0 +1,27 @@
+/* Ledger Noir — type tokens */
+:root {
+  --font-display: "Syne", "Avenir Next", "Segoe UI", sans-serif;
+  --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-heading: var(--font-display);
+
+  --ln-text-xs: 0.75rem;
+  --ln-text-sm: 0.875rem;
+  --ln-text-base: 1rem;
+  --ln-text-lg: 1.125rem;
+  --ln-text-xl: 1.35rem;
+  --ln-text-2xl: 1.75rem;
+  --ln-text-3xl: 2.25rem;
+  --ln-text-4xl: 2.75rem;
+
+  --ln-tracking-mark: 0.2em;
+  --ln-tracking-tight: -0.02em;
+  --ln-leading-display: 1.05;
+  --ln-leading-body: 1.55;
+}
+
+.ln-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}

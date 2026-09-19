@@ -17,6 +17,7 @@ import {
   initSentry,
   isSentryEnabled,
 } from "./utils/sentry.js";
+import { buildLoggerOptions } from "./utils/logger.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -27,12 +28,15 @@ declare module "fastify" {
 export async function createApp(options: FastifyServerOptions = {}) {
   initSentry();
 
+  const { logger: loggerOverride, ...restOptions } = options;
+
   const app = Fastify({
-    logger: true,
+    logger:
+      loggerOverride !== undefined ? loggerOverride : buildLoggerOptions(),
     bodyLimit: 6 * 1024 * 1024,
     requestIdHeader: "x-request-id",
     genReqId: (req) => newRequestId(req.headers["x-request-id"]),
-    ...options,
+    ...restOptions,
   });
 
   // Preserve raw body string for webhook HMAC verification (O4.7).
@@ -73,6 +77,19 @@ export async function createApp(options: FastifyServerOptions = {}) {
   app.addHook("onSend", async (request, reply, payload) => {
     reply.header("X-Request-Id", String(request.id));
     return payload;
+  });
+
+  app.addHook("onResponse", async (request, reply) => {
+    request.log.info(
+      {
+        reqId: String(request.id),
+        method: request.method,
+        url: request.url,
+        statusCode: reply.statusCode,
+        responseTime: reply.elapsedTime,
+      },
+      "request completed",
+    );
   });
 
   /** Liveness — process is up (no dependency checks). */

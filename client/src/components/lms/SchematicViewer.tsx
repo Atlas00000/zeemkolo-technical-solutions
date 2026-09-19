@@ -15,25 +15,25 @@ export function SchematicViewer({ src, title = "Schematic" }: SchematicViewerPro
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-brand-steel">{title}</p>
+        <p className="text-sm font-medium text-[var(--ln-muted)]">{title}</p>
         <div className="flex gap-2 text-sm">
           <button
             type="button"
-            className="border border-brand-steel/20 px-2 py-1"
+            className="border border-[var(--ln-hairline-strong)] px-2 py-1 text-[var(--ln-ink)] hover:border-[var(--ln-signal)]"
             onClick={() => setScale((s) => Math.min(3, Number((s + 0.2).toFixed(2))))}
           >
             Zoom +
           </button>
           <button
             type="button"
-            className="border border-brand-steel/20 px-2 py-1"
+            className="border border-[var(--ln-hairline-strong)] px-2 py-1 text-[var(--ln-ink)] hover:border-[var(--ln-signal)]"
             onClick={() => setScale((s) => Math.max(0.5, Number((s - 0.2).toFixed(2))))}
           >
             Zoom −
           </button>
           <button
             type="button"
-            className="border border-brand-steel/20 px-2 py-1"
+            className="border border-[var(--ln-hairline-strong)] px-2 py-1 text-[var(--ln-ink)] hover:border-[var(--ln-signal)]"
             onClick={() => {
               setScale(1);
               setOffset({ x: 0, y: 0 });
@@ -44,7 +44,7 @@ export function SchematicViewer({ src, title = "Schematic" }: SchematicViewerPro
         </div>
       </div>
       <div
-        className="h-64 cursor-grab overflow-hidden border border-brand-steel/20 bg-brand-mist active:cursor-grabbing"
+        className="h-64 cursor-grab overflow-hidden border border-[var(--ln-hairline)] bg-[var(--ln-canvas-elevated)] active:cursor-grabbing"
         onPointerDown={(event) => {
           drag.current = {
             x: event.clientX,
