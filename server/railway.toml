@@ -1,0 +1,11 @@
+# Railway service config — set Root Directory to `server` in the dashboard
+# (or deploy this folder as the service source).
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health/live"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

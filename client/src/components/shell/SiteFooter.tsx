@@ -1,17 +1,7 @@
 import Link from "next/link";
+import { FOOTER_NAV_LINKS } from "@/components/shell/nav-links";
 
-const links = [
-  { href: "/consultation", label: "Consultation" },
-  { href: "/zeemble", label: "Zeemble" },
-  { href: "/store", label: "Store" },
-  { href: "/forum", label: "Forum" },
-  { href: "/ui", label: "UI system" },
-  { href: "/privacy", label: "Privacy" },
-  { href: "/terms", label: "Terms" },
-  { href: "/sign-in", label: "Sign in" },
-];
-
-/** Shared site footer — Ledger Noir elevated void + hairline. */
+/** Shared site footer — Ledger Noir elevated void + hairline. Desktop (`md+`). */
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-[var(--ln-hairline)] bg-[var(--ln-canvas-elevated)] px-[var(--ln-page-x)] py-12 text-[var(--ln-muted)]">
@@ -29,7 +19,7 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          {links.map((link) => (
+          {FOOTER_NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}

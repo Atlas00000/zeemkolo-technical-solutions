@@ -1,0 +1,128 @@
+/* System field — loading / 404 atmosphere (Ledger Noir) */
+
+@keyframes sys-wash-drift {
+  0%,
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.06);
+  }
+}
+
+@keyframes sys-scan {
+  0% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.55;
+  }
+  88% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(220%);
+    opacity: 0;
+  }
+}
+
+@keyframes sys-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sys-pulse-ring {
+  0% {
+    transform: scale(0.72);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes sys-glyph-breathe {
+  0%,
+  100% {
+    letter-spacing: -0.06em;
+    opacity: 0.07;
+  }
+  50% {
+    letter-spacing: -0.02em;
+    opacity: 0.12;
+  }
+}
+
+@keyframes sys-status-flash {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes sys-spark {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--sys-spark-x, 40px), var(--sys-spark-y, -60px), 0)
+      scale(0);
+    opacity: 0;
+  }
+}
+
+.sys-wash {
+  animation: sys-wash-drift 14s var(--ln-ease-in-out, ease-in-out) infinite;
+}
+
+.sys-scan-beam {
+  animation: sys-scan 3.6s var(--ln-ease-in-out, ease-in-out) infinite;
+}
+
+.sys-orbit {
+  animation: sys-orbit-spin 18s linear infinite;
+}
+
+.sys-orbit-rev {
+  animation: sys-orbit-spin 11s linear infinite reverse;
+}
+
+.sys-pulse-ring {
+  animation: sys-pulse-ring 2.4s var(--ln-ease-out, ease-out) infinite;
+}
+
+.sys-glyph {
+  animation: sys-glyph-breathe 8s var(--ln-ease-in-out, ease-in-out) infinite;
+}
+
+.sys-status {
+  animation: sys-status-flash 1.8s var(--ln-ease-in-out, ease-in-out) infinite;
+}
+
+.sys-spark {
+  animation: sys-spark 0.9s var(--ln-ease-out, ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sys-wash,
+  .sys-scan-beam,
+  .sys-orbit,
+  .sys-orbit-rev,
+  .sys-pulse-ring,
+  .sys-glyph,
+  .sys-status,
+  .sys-spark {
+    animation: none !important;
+  }
+}

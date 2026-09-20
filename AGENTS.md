@@ -85,6 +85,7 @@ See `docs/adr/`:
 
 ## Related docs
 
+- `DEPLOYMENT.md` — Railway (API/Postgres/Redis) + Vercel (client)
 - `CONTRIBUTING.md` — PR / test expectations  
 - `docs/runbooks/` — backup/restore, migrations, admin bootstrap, R2 storage, content media, Sentry
 - `docs/1st-optimization.md` — O0–O7 backlog  

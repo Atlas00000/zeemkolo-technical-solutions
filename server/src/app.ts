@@ -18,6 +18,7 @@ import {
   isSentryEnabled,
 } from "./utils/sentry.js";
 import { buildLoggerOptions } from "./utils/logger.js";
+import { parseCorsOrigins } from "./utils/cors-origin.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -60,7 +61,7 @@ export async function createApp(options: FastifyServerOptions = {}) {
   );
 
   await app.register(cors, {
-    origin: env.CORS_ORIGIN,
+    origin: parseCorsOrigins(env.CORS_ORIGIN),
     credentials: true,
     allowedHeaders: [
       "Content-Type",

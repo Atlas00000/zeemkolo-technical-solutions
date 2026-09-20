@@ -15,6 +15,7 @@ const envSchema = z.object({
       "postgresql://zeemkolo_admin:zeemkolo_secret_password@localhost:5432/zeemkolo_db?schema=public",
     ),
   REDIS_URL: z.string().default("redis://localhost:6379"),
+  /** Comma-separated origins, e.g. `https://app.example.com,http://localhost:3000` */
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   CLERK_SECRET_KEY: z.string().min(1),
   CLERK_PUBLISHABLE_KEY: z.string().min(1),

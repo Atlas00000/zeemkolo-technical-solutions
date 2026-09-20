@@ -1,6 +1,8 @@
 # Zeemkolo Technical Solutions — Monorepo
 
-Decoupled platform: **Next.js client** (Vercel later) + **Fastify server** (Railway later) + Postgres/Redis.
+Decoupled platform: **Next.js client** ([Vercel](DEPLOYMENT.md)) + **Fastify server** ([Railway](DEPLOYMENT.md)) + Postgres/Redis.
+
+**Deploy:** see **[`DEPLOYMENT.md`](DEPLOYMENT.md)** (Railway API/DB + Vercel client). Live `zeemkolo.com` cutover remains paused ([ADR-005](docs/adr/005-phase8-production-paused.md)).
 
 ## Prerequisites
 
@@ -37,8 +39,9 @@ Full agent/contributor guide: **`AGENTS.md`** · **`CONTRIBUTING.md`**
 
 | Path | Role |
 |------|------|
-| `client/` | Next.js 15 App Router |
 | `server/` | Fastify + Prisma API |
+| `client/` | Next.js 15 App Router |
+| `DEPLOYMENT.md` | Railway (API/DB) + Vercel (client) deploy steps |
 | `docs/adr/` | Locked architecture decisions |
 | `docs/runbooks/` | Backup/restore & migrations |
 | `docs/1st-optimization.md` | Optimization phases O0–O7 |

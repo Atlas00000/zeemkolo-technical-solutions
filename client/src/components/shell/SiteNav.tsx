@@ -9,15 +9,9 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { AdminNavLink } from "@/components/shell/AdminNavLink";
+import { PRIMARY_NAV_LINKS } from "@/components/shell/nav-links";
 import { Button } from "@/design/primitives/Button";
 import { ThemeToggle } from "@/design/ThemeToggle";
-
-const links = [
-  { href: "/consultation", label: "Consultation" },
-  { href: "/zeemble", label: "Zeemble" },
-  { href: "/store", label: "Store" },
-  { href: "/forum", label: "Forum" },
-];
 
 type SiteNavProps = {
   variant?: "marketing" | "app";
@@ -53,12 +47,12 @@ export function SiteNav({ variant = "app" }: SiteNavProps) {
         <nav
           className={
             marketing
-              ? "absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-6 text-sm text-[var(--ln-muted)] md:flex dark:text-white/70"
-              : "absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-6 text-sm text-[var(--ln-muted)] md:flex"
+              ? "absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-6 text-sm text-[var(--ln-muted)] dark:text-white/70"
+              : "absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-6 text-sm text-[var(--ln-muted)]"
           }
           aria-label="Primary"
         >
-          {links.map((link) => (
+          {PRIMARY_NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
