@@ -2,20 +2,24 @@
 
 **Grammar:** Ledger OS structure (hairlines, asymmetric planes, tabular nums, motion-for-state).  
 **Tokens:** `client/src/design/tokens/color.css`  
-**Toggle:** SiteNav `ThemeToggle` · `localStorage` key `zeemkolo-theme` · default **dark**
+**Toggle:** SiteNav `ThemeToggle` · `localStorage` key `zeemkolo-theme` · default **light**
 
-**Currently previewing:** **Porcelain Noir + Connect Blue** (brand-aligned)  
-**Brand mix (site):** blue `#0905FB` ~70% · red `#DD0340` ~10% · gold `#F7A100` reserved for social (not used here)
+**Currently active (split):**  
+- **Light** — Porcelain Noir + Connect Blue (unchanged)  
+- **Dark** — Porcelain Noir + Vermilion Mark  
+
+**Brand mix (light):** blue `#0905FB` ~70% · red `#DD0340` ~10% · gold `#F7A100` reserved for social (not used here)  
+**Dark accent:** vermilion `#DD0340` (signal + mark)
 
 Avoid: purple AI gradients, crypto neon, cream + terracotta + serif cliché, brand gold on web.
 
 ---
 
-## Active — Porcelain Noir + Connect Blue
+## Active — Light Connect Blue / Dark Vermilion
 
-**Vibe:** Same Ledger grammar; connectivity blue for gradients, rails, schematics, and CTAs; brand red for names / sparse marks only.
+**Vibe:** Light keeps connect-blue CTAs and rails; dark is absolute noir with vermilion as the primary accent.
 
-| Role | Light | Dark |
+| Role | Light (Porcelain + Connect Blue) | Dark (Porcelain + Vermilion) |
 | :--- | :--- | :--- |
 | Canvas | `#E4E3DE` graphite paper | `#080808` absolute noir |
 | Elevated | `#DAD9D3` | `#0C0C0C` |
@@ -24,9 +28,9 @@ Avoid: purple AI gradients, crypto neon, cream + terracotta + serif cliché, bra
 | Ink | `#0A0A0A` | `#F2F2F0` |
 | Muted | `#5A5A56` | `#A3A39E` |
 | Hairline | `#111111` @ 14% | `#F2F2F0` @ 10% |
-| Signal (connect) | `#0905FB` | `#4E4BFF` |
+| Signal | `#0905FB` connect | `#DD0340` vermilion |
 | Mark (names) | `#DD0340` | `#DD0340` |
-| Signal FG | `#FFFFFF` | `#080808` |
+| Signal FG | `#FFFFFF` | `#FFFFFF` |
 | Warn | `#8A5A2B` (system, not brand gold) | `#C49A6C` |
 | Halt | `#8B0000` | `#FF4D4D` |
 
@@ -39,7 +43,7 @@ Avoid: purple AI gradients, crypto neon, cream + terracotta + serif cliché, bra
 | 1 | Obsidian Graphite + Copper Signal | Previewed |
 | 2 | Arctic Slate + Electric Indigo | Not yet |
 | 3 | Carbon Ledger + Sage Audit | Not yet |
-| 4 | Porcelain Noir + Vermilion Mark | Superseded by Connect Blue |
+| 4 | Porcelain Noir + Vermilion Mark | **Active (dark only)** |
 | 5 | Night Harbor + Fog Cyan | Not yet |
 
 ---
@@ -110,4 +114,4 @@ Avoid: purple AI gradients, crypto neon, cream + terracotta + serif cliché, bra
 
 ## Next
 
-Hard-refresh the homepage and flip Dark/Light. Say which number to preview next, or which to **lock**.
+Hard-refresh and flip Dark to verify Porcelain + Vermilion. Light stays Porcelain + Connect Blue. Say which candidate to preview next, or which to **lock** fully.

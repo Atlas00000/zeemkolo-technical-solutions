@@ -1,4 +1,4 @@
-﻿-- Clerk identity: add clerk_user_id, drop password_hash (no row deletes)
+-- Clerk identity: add clerk_user_id, drop password_hash (no row deletes)
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "clerk_user_id" TEXT;
 
 UPDATE "users"

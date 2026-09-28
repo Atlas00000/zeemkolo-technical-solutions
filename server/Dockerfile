@@ -23,8 +23,10 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/scripts/railway-start.sh ./scripts/railway-start.sh
-RUN chmod +x ./scripts/railway-start.sh && chown -R zeemkolo:zeemkolo /app
+RUN sed -i 's/\r$//' ./scripts/railway-start.sh \
+  && chmod +x ./scripts/railway-start.sh \
+  && chown -R zeemkolo:zeemkolo /app
 USER zeemkolo
 EXPOSE 5000
 # Railway injects PORT; HOST defaults to 0.0.0.0 via env schema / ENV above
-CMD ["./scripts/railway-start.sh"]
+CMD ["/bin/sh", "./scripts/railway-start.sh"]

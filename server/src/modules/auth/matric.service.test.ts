@@ -60,6 +60,26 @@ describe("assignMatricAtSignup (Phase 1)", () => {
     expect(second.created).toBe(false);
     expect(second.matric.code).toBe(first.matric.code);
   });
+
+  it("survives concurrent assign without aborting", async () => {
+    const user = await prisma.user.create({
+      data: {
+        clerkUserId: `${SUITE}-auto-race`,
+        email: `${SUITE}-auto-race@example.com`,
+        fullName: "Race Matric User",
+        role: Role.GENERAL_CUSTOMER,
+      },
+    });
+    const [a, b] = await Promise.all([
+      assignMatricAtSignup(user.id),
+      assignMatricAtSignup(user.id),
+    ]);
+    expect(a.matric.code).toBe(b.matric.code);
+    const count = await prisma.matric.count({ where: { userId: user.id } });
+    expect(count).toBe(1);
+    await prisma.matric.deleteMany({ where: { userId: user.id } });
+    await prisma.user.delete({ where: { id: user.id } });
+  });
 });
 
 describe("claimMatric legacy path", () => {

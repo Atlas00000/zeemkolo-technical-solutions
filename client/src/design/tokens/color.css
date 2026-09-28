@@ -1,5 +1,6 @@
-/* Porcelain Noir + Connect Blue — dual theme
- * Brand: blue #0905FB (connectivity, ~70%) · red #DD0340 (marks/names, ~10%)
+/* Dual theme (split):
+ * Light — Porcelain Noir + Connect Blue (#0905FB signal · #DD0340 mark)
+ * Dark  — Porcelain Noir + Vermilion Mark (#DD0340 signal)
  * Gold #F7A100 reserved for social — not used on the site.
  */
 
@@ -89,7 +90,7 @@
   --brand-void: var(--ln-canvas-elevated);
 }
 
-/* ── Dark ──────────────────────────────────────────────────────────────── */
+/* ── Dark — Porcelain Noir + Vermilion Mark ─────────────────────────────── */
 .dark,
 [data-theme="dark"] {
   color-scheme: dark;
@@ -105,11 +106,12 @@
   --ln-muted: #a3a39e;
   --ln-faint: #6e6e6a;
 
-  /* Lifted blue so lines/gradients read on noir */
-  --ln-signal: #4e4bff;
-  --ln-signal-dim: color-mix(in srgb, #4e4bff 16%, transparent);
-  --ln-signal-foreground: #080808;
+  /* Vermilion — primary accent (CTAs, rails, live signal) */
+  --ln-signal: #dd0340;
+  --ln-signal-dim: color-mix(in srgb, #dd0340 16%, transparent);
+  --ln-signal-foreground: #ffffff;
 
+  /* Mark aligns with vermilion in dark */
   --ln-mark: #dd0340;
   --ln-mark-dim: color-mix(in srgb, #dd0340 16%, transparent);
 
@@ -119,9 +121,9 @@
   --ln-halt-dim: color-mix(in srgb, #ff4d4d 16%, transparent);
   --ln-skip: #6e6e6a;
 
-  --ln-wash-a: color-mix(in srgb, #4e4bff 8%, transparent);
-  --ln-wash-b: color-mix(in srgb, #0a0a22 45%, transparent);
-  --ln-wash-c: color-mix(in srgb, #4e4bff 4%, transparent);
+  --ln-wash-a: color-mix(in srgb, #dd0340 8%, transparent);
+  --ln-wash-b: color-mix(in srgb, #080808 55%, transparent);
+  --ln-wash-c: color-mix(in srgb, #dd0340 4%, transparent);
 
   --ln-shadow-plane: 0 1px 0 color-mix(in srgb, #ffffff 4%, transparent),
     0 12px 40px color-mix(in srgb, #000000 45%, transparent);

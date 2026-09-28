@@ -1,4 +1,4 @@
-import { Role, type Prisma } from "@prisma/client";
+import { Prisma, Role, type Prisma as PrismaTypes } from "@prisma/client";
 import { prisma } from "../../config/db.js";
 
 export class MatricClaimError extends Error {
@@ -9,6 +9,12 @@ export class MatricClaimError extends Error {
     super(message);
     this.name = "MatricClaimError";
   }
+}
+
+function isUniqueConstraintError(err: unknown): boolean {
+  return (
+    err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002"
+  );
 }
 
 const MATRIC_PATTERN = /^ZMB-\d{4}-\d{3}$/;
@@ -33,7 +39,9 @@ export function isValidMatricFormat(code: string): boolean {
   return MATRIC_PATTERN.test(normalizeMatricCode(code));
 }
 
-async function nextMatricCode(tx: Prisma.TransactionClient): Promise<string> {
+async function nextMatricCode(
+  tx: PrismaTypes.TransactionClient,
+): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `ZMB-${year}-`;
 
@@ -60,26 +68,31 @@ async function nextMatricCode(tx: Prisma.TransactionClient): Promise<string> {
 /**
  * Assign a unique matric at signup and elevate to ZEEMBLE_STUDENT.
  * Idempotent: returns existing matric if already assigned.
+ *
+ * Unique collisions (concurrent /auth/me) retry in a **new** transaction —
+ * Postgres aborts the whole tx after a failed INSERT, so in-tx retries fail
+ * with 25P02.
  */
 export async function assignMatricAtSignup(userId: string) {
-  return prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({
-      where: { id: userId },
-      include: { matric: true },
-    });
-    if (!user) {
-      throw new MatricClaimError("User not found", 404);
-    }
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          include: { matric: true },
+        });
+        if (!user) {
+          throw new MatricClaimError("User not found", 404);
+        }
 
-    if (user.matric) {
-      return { user, matric: user.matric, created: false as const };
-    }
+        if (user.matric) {
+          return { user, matric: user.matric, created: false as const };
+        }
 
-    const nextRole = user.role === Role.ADMIN ? Role.ADMIN : Role.ZEEMBLE_STUDENT;
+        const nextRole =
+          user.role === Role.ADMIN ? Role.ADMIN : Role.ZEEMBLE_STUDENT;
+        const code = await nextMatricCode(tx);
 
-    let code = await nextMatricCode(tx);
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      try {
         const matric = await tx.matric.create({
           data: {
             code,
@@ -95,13 +108,31 @@ export async function assignMatricAtSignup(userId: string) {
         });
 
         return { user: updatedUser, matric, created: true as const };
-      } catch {
-        code = await nextMatricCode(tx);
+      });
+    } catch (err) {
+      if (err instanceof MatricClaimError) {
+        throw err;
       }
+      // Concurrent assign: other request already linked a matric to this user.
+      if (isUniqueConstraintError(err)) {
+        const settled = await prisma.user.findUnique({
+          where: { id: userId },
+          include: { matric: true },
+        });
+        if (settled?.matric) {
+          return {
+            user: settled,
+            matric: settled.matric,
+            created: false as const,
+          };
+        }
+        continue;
+      }
+      throw err;
     }
+  }
 
-    throw new MatricClaimError("Could not allocate a unique matric number", 500);
-  });
+  throw new MatricClaimError("Could not allocate a unique matric number", 500);
 }
 
 /** Legacy manual claim — kept for admin tooling / rare overrides. */

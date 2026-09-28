@@ -4,7 +4,7 @@ import { Role, type User } from "@prisma/client";
 import { env } from "../config/env.js";
 import { prisma } from "../config/db.js";
 import { upsertUserFromClerk } from "../modules/auth/user-sync.service.js";
-import { assignMatricAtSignup } from "../modules/auth/matric.service.js";
+import { assignMatricAtSignup, MatricClaimError } from "../modules/auth/matric.service.js";
 import { sendApiError } from "../utils/api-error.js";
 
 export const clerkClient = createClerkClient({
@@ -71,7 +71,18 @@ export async function requireAuth(
     }
 
     request.auth = { clerkUserId, user };
-  } catch {
+  } catch (err) {
+    if (err instanceof MatricClaimError) {
+      await sendApiError(
+        request,
+        reply,
+        err.statusCode,
+        "MatricAssignmentFailed",
+        err.message,
+        "matric_assign_failed",
+      );
+      return;
+    }
     await sendApiError(request, reply, 401, "Unauthorized", "Invalid or expired session", "invalid_session");
     return;
   }
