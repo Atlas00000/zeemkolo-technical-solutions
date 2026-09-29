@@ -16,8 +16,8 @@ export function SupportFitStage() {
       data-support-fit-stage
       className={
         reducedMotion
-          ? "relative min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-6 lg:border-t-0 lg:border-l lg:pl-10 lg:pt-0"
-          : "support-stage-enter relative min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-6 lg:border-t-0 lg:border-l lg:pl-10 lg:pt-0"
+          ? "relative min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-6 xl:border-t-0 xl:border-l xl:pl-10 xl:pt-0"
+          : "support-stage-enter relative min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-6 xl:border-t-0 xl:border-l xl:pl-10 xl:pt-0"
       }
     >
       <p className="font-mono text-xs tracking-[0.22em] text-[var(--ln-signal)] uppercase">

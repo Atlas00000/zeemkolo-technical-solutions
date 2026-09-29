@@ -13,13 +13,23 @@
 
   /* Gutters breathe a bit more on wide viewports */
   --ln-page-x: clamp(1.25rem, 4vw, 3rem);
-  /* Mobile/tablet: fill the padded viewport; desktop: ~75% screen */
+  /* Mobile/tablet: fill the padded viewport */
   --ln-page-max: 100%;
   --ln-rail-width: 13.5rem;
 }
 
+/* Laptop band (~1024–1399): use more of the viewport so dual panes aren't crushed */
 @media (min-width: 1024px) {
   :root {
+    --ln-page-max: min(92vw, 72rem);
+    --ln-page-x: clamp(1.25rem, 3.5vw, 2.25rem);
+  }
+}
+
+/* Large desktop (1400px+): restore intentional ~75% shell */
+@media (min-width: 1400px) {
+  :root {
     --ln-page-max: 75vw;
+    --ln-page-x: clamp(1.25rem, 4vw, 3rem);
   }
 }

@@ -16,8 +16,8 @@ export function LessonStage() {
       key={lesson.id}
       className={
         reducedMotion
-          ? "min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-8 lg:border-t-0 lg:border-l lg:pl-12 lg:pt-0"
-          : "lesson-stage-enter min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-8 lg:border-t-0 lg:border-l lg:pl-12 lg:pt-0"
+          ? "min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-8 xl:border-t-0 xl:border-l xl:pl-12 xl:pt-0"
+          : "lesson-stage-enter min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-8 xl:border-t-0 xl:border-l xl:pl-12 xl:pt-0"
       }
       data-lesson-stage
     >

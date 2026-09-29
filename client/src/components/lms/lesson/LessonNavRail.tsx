@@ -16,7 +16,7 @@ export function LessonNavRail() {
   );
 
   return (
-    <aside className="min-w-0 lg:w-[min(100%,17.5rem)] lg:shrink-0" data-lesson-nav>
+    <aside className="min-w-0 xl:w-[min(100%,17.5rem)] xl:shrink-0" data-lesson-nav>
       <LessonProgress />
 
       <p className="mb-3 font-mono text-[10px] tracking-[0.22em] text-[var(--ln-faint)] uppercase">

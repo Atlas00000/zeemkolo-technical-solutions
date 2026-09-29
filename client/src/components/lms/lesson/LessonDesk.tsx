@@ -33,7 +33,7 @@ function LessonDeskInner() {
 
   return (
     <div
-      className="flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-14"
+      className="flex flex-col gap-10 lg:gap-12 xl:flex-row xl:items-start xl:gap-14"
       data-lesson-desk-grid
     >
       <LessonNavRail />

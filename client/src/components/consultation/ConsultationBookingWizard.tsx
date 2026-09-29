@@ -230,7 +230,7 @@ export function ConsultationBookingWizard() {
     <BookingDeskProvider step={step}>
       <BookingDeskShell step={step}>
         <div className="relative z-10 mx-auto max-w-shell px-[var(--ln-page-x)] py-8 md:py-10">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-start lg:gap-10">
+          <div className="grid gap-8 lg:gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] xl:items-start xl:gap-10">
             <div className="min-w-0">
               <BookingHeader />
 

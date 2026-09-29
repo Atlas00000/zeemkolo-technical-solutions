@@ -16,7 +16,7 @@ export function SpotlightSection() {
       <section className="relative isolate overflow-hidden border-y border-[var(--ln-hairline)] text-[var(--ln-ink)]">
         <SpotlightField />
 
-        <div className="relative z-10 mx-auto grid max-w-shell gap-14 px-[var(--ln-page-x)] py-20 md:grid-cols-[1.15fr_0.85fr] md:items-stretch md:gap-10 md:py-28 lg:gap-16">
+        <div className="relative z-10 mx-auto grid max-w-shell gap-10 px-[var(--ln-page-x)] py-20 md:gap-12 md:py-28 xl:grid-cols-[1.15fr_0.85fr] xl:items-stretch xl:gap-16">
           <SpotlightCopy />
           <SpotlightInstrument />
         </div>

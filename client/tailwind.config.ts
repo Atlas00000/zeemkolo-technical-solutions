@@ -5,6 +5,10 @@ const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      /* xl = large desktop split (laptop band stays below this) */
+      screens: {
+        xl: "1400px",
+      },
       colors: {
         brand: {
           /* Legacy names → Ledger Noir aliases */

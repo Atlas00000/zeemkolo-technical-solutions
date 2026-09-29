@@ -71,7 +71,7 @@ export default async function CourseOverviewPage({ params }: CoursePageProps) {
             </div>
           ) : null}
 
-          <div className="mt-12 flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-14">
+          <div className="mt-12 flex flex-col gap-8 lg:gap-10 xl:flex-row xl:items-start xl:gap-14">
             <div
               className="min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-6"
               data-library-rail
@@ -87,7 +87,7 @@ export default async function CourseOverviewPage({ params }: CoursePageProps) {
               </div>
             </div>
             <aside
-              className="min-w-0 border-t border-[var(--ln-hairline)] pt-6 lg:w-64 lg:shrink-0 lg:border-t-0 lg:border-l lg:border-[var(--ln-signal)] lg:pl-10 lg:pt-0"
+              className="min-w-0 border-t border-[var(--ln-hairline)] pt-6 xl:w-64 xl:shrink-0 xl:border-t-0 xl:border-l xl:border-[var(--ln-signal)] xl:pl-10 xl:pt-0"
               data-library-stage
             >
               <p className="font-mono text-xs tracking-[0.22em] text-[var(--ln-signal)] uppercase">

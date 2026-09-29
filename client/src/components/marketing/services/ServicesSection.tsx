@@ -20,11 +20,11 @@ export function ServicesSection() {
         <div className="relative z-10 mx-auto max-w-shell px-[var(--ln-page-x)] py-20 md:py-28">
           <ServicesHeader />
 
-          <div className="mt-14 grid items-start gap-12 lg:mt-20 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-16 xl:gap-24">
-            <div className="order-2 lg:order-1">
+          <div className="mt-14 grid items-start gap-10 md:gap-12 xl:mt-20 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-16 2xl:gap-24">
+            <div className="order-2 xl:order-1">
               <ServicesRail />
             </div>
-            <div className="order-1 lg:order-2">
+            <div className="order-1 xl:order-2">
               <ServicesStage />
             </div>
           </div>

@@ -77,7 +77,7 @@ export default async function StoreProductPage({ params }: ProductPageProps) {
             </Badge>
           </div>
 
-          <div className="mt-12 flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-14">
+          <div className="mt-12 flex flex-col gap-8 lg:gap-10 xl:flex-row xl:items-start xl:gap-14">
             <div
               className="min-w-0 flex-1 border-t border-[var(--ln-signal)] pt-6"
               data-store-stage
@@ -91,7 +91,7 @@ export default async function StoreProductPage({ params }: ProductPageProps) {
                 <ProductPurchaseActions product={product} />
               </div>
             </div>
-            <aside className="border-t border-[var(--ln-hairline)] pt-6 lg:w-56 lg:shrink-0 lg:border-t-0 lg:border-l lg:border-[var(--ln-hairline)] lg:pl-8 lg:pt-0">
+            <aside className="border-t border-[var(--ln-hairline)] pt-6 xl:w-56 xl:shrink-0 xl:border-t-0 xl:border-l xl:border-[var(--ln-hairline)] xl:pl-8 xl:pt-0">
               <p className="font-mono text-xs tracking-[0.22em] text-[var(--ln-signal)] uppercase">
                 Purchase
               </p>

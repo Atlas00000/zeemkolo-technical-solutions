@@ -28,7 +28,7 @@ export function CtaSteps() {
   const active = CTA_STEPS[activeIndex]!;
 
   return (
-    <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:gap-12">
+    <div className="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-end xl:gap-12">
       <ul
         className="flex min-w-0 flex-1 flex-col"
         role="listbox"
@@ -95,7 +95,7 @@ export function CtaSteps() {
 
       <div
         key={active.id}
-        className="cta-signal-enter h-28 w-full max-w-[16rem] shrink-0 self-start lg:self-end"
+        className="cta-signal-enter h-28 w-full max-w-[16rem] shrink-0 self-start xl:self-end"
       >
         <CtaSignal step={active.id} />
       </div>

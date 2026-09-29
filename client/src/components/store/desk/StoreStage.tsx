@@ -20,8 +20,8 @@ export function StoreStage() {
       data-store-stage
       className={
         reducedMotion
-          ? "relative min-w-0 flex-[1.15] border-t border-[var(--ln-signal)] pt-8 lg:border-t-0 lg:border-l lg:pl-12 lg:pt-0"
-          : "store-stage-enter relative min-w-0 flex-[1.15] border-t border-[var(--ln-signal)] pt-8 lg:border-t-0 lg:border-l lg:pl-12 lg:pt-0"
+          ? "relative min-w-0 flex-[1.15] border-t border-[var(--ln-signal)] pt-8 xl:border-t-0 xl:border-l xl:pl-12 xl:pt-0"
+          : "store-stage-enter relative min-w-0 flex-[1.15] border-t border-[var(--ln-signal)] pt-8 xl:border-t-0 xl:border-l xl:pl-12 xl:pt-0"
       }
     >
       <p className="font-mono text-xs tracking-[0.22em] text-[var(--ln-signal)] uppercase">

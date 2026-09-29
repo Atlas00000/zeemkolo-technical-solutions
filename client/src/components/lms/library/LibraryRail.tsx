@@ -22,7 +22,7 @@ export function LibraryRail() {
   const activeCourse = courses[activeIndex];
 
   return (
-    <div className="min-w-0 flex-1 lg:max-w-md" data-library-rail-wrap>
+    <div className="min-w-0 flex-1 xl:max-w-md" data-library-rail-wrap>
       <p className="mb-2 font-mono text-[10px] tracking-[0.22em] text-[var(--ln-faint)] uppercase">
         Catalog
       </p>

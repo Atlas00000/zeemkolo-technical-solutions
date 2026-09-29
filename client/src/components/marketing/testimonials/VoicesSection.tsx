@@ -20,11 +20,11 @@ export function VoicesSection() {
         <div className="relative z-10 mx-auto max-w-shell px-[var(--ln-page-x)] py-20 md:py-28">
           <VoicesHeader />
 
-          <div className="mt-14 grid items-start gap-12 lg:mt-20 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16 xl:gap-24">
-            <div className="order-2 lg:order-1">
+          <div className="mt-14 grid items-start gap-10 md:gap-12 xl:mt-20 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] xl:gap-16 2xl:gap-24">
+            <div className="order-2 xl:order-1">
               <VoicesRail />
             </div>
-            <div className="order-1 lg:order-2">
+            <div className="order-1 xl:order-2">
               <VoicesStage />
             </div>
           </div>

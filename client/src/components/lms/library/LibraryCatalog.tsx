@@ -39,7 +39,7 @@ function LibraryCatalogInner() {
       <div className="relative z-10 mx-auto max-w-shell px-[var(--ln-page-x)] py-16 md:py-24">
         <LibraryMasthead />
 
-        <div className="mt-14 flex flex-col gap-12 lg:mt-20 lg:flex-row lg:items-start lg:gap-16">
+        <div className="mt-14 flex flex-col gap-10 lg:gap-12 xl:mt-20 xl:flex-row xl:items-start xl:gap-16">
           <LibraryRail />
           <LibraryStage />
         </div>

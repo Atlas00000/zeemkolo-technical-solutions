@@ -42,7 +42,7 @@ function SupportSectionInner() {
       <div className="relative z-10 mx-auto max-w-shell px-[var(--ln-page-x)] py-16 md:py-24">
         <SupportScope />
 
-        <div className="mt-14 flex flex-col gap-10 lg:mt-20 lg:flex-row lg:items-start lg:gap-14">
+        <div className="mt-14 flex flex-col gap-8 lg:gap-10 xl:mt-20 xl:flex-row xl:items-start xl:gap-14">
           <div className="min-w-0 flex-1">
             <p className="mb-2 font-mono text-[10px] tracking-[0.22em] text-[var(--ln-faint)] uppercase">
               Fit for

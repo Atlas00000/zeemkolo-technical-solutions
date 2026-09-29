@@ -33,8 +33,8 @@ function CtaSectionInner() {
     >
       <CtaField />
 
-      <div className="relative z-10 mx-auto flex max-w-shell flex-col gap-12 px-[var(--ln-page-x)] py-20 md:gap-14 md:py-28">
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+      <div className="relative z-10 mx-auto flex max-w-shell flex-col gap-10 px-[var(--ln-page-x)] py-20 md:gap-12 md:py-28 xl:gap-14">
+        <div className="flex flex-col gap-8 md:gap-10 xl:flex-row xl:items-end xl:justify-between xl:gap-16">
           <CtaCopy />
           <CtaActions />
         </div>

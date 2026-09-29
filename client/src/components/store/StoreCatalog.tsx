@@ -76,7 +76,7 @@ function StoreCatalogInner() {
         ) : null}
 
         {!loading && !error && product ? (
-          <div className="mt-12 flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16">
+          <div className="mt-12 flex flex-col gap-10 lg:gap-12 xl:flex-row xl:items-start xl:gap-16">
             <StoreRail />
             <StoreStage />
           </div>
