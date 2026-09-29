@@ -10,6 +10,7 @@ import {
 } from "@clerk/nextjs";
 import { AdminNavLink } from "@/components/shell/AdminNavLink";
 import { PRIMARY_NAV_LINKS } from "@/components/shell/nav-links";
+import { BrandMark } from "@/design/BrandMark";
 import { Button } from "@/design/primitives/Button";
 import { ThemeToggle } from "@/design/ThemeToggle";
 
@@ -29,19 +30,8 @@ export function SiteNav({ variant = "app" }: SiteNavProps) {
       }
     >
       <div className="relative flex w-full items-center justify-between gap-4 px-[var(--ln-page-x)] py-4">
-        <Link
-          href="/"
-          className={
-            marketing
-              ? "relative z-10 shrink-0 font-display text-sm font-semibold tracking-[0.22em] text-[var(--ln-ink)] uppercase dark:text-white"
-              : "relative z-10 shrink-0 font-display text-sm font-semibold tracking-[0.22em] text-[var(--ln-ink)] uppercase"
-          }
-        >
-          Zeemkolo
-          <span
-            className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-[var(--ln-signal)] align-middle shadow-[0_0_12px_var(--ln-signal)] dark:shadow-none"
-            aria-hidden
-          />
+        <Link href="/" className="relative z-10 shrink-0">
+          <BrandMark className={marketing ? "dark:text-white" : undefined} />
         </Link>
 
         <nav

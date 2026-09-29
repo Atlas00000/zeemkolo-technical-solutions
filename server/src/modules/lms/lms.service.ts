@@ -1,5 +1,6 @@
 import { Role } from "@prisma/client";
 import { prisma } from "../../config/db.js";
+import { createR2SignedDownloadUrl } from "../../utils/object-storage.js";
 
 export class LmsError extends Error {
   constructor(
@@ -12,6 +13,7 @@ export class LmsError extends Error {
 }
 
 const PREVIEW_CHAR_LIMIT = 280;
+const R2_VIDEO_PREFIX = "r2:";
 
 function canAccessFullContent(role?: Role): boolean {
   return role === Role.ZEEMBLE_STUDENT || role === Role.ADMIN;
@@ -20,6 +22,20 @@ function canAccessFullContent(role?: Role): boolean {
 function truncateMarkdown(body: string): string {
   if (body.length <= PREVIEW_CHAR_LIMIT) return body;
   return `${body.slice(0, PREVIEW_CHAR_LIMIT).trimEnd()}\n\n…`;
+}
+
+/** Resolve `r2:object/key` to a time-limited signed URL; pass through http(s). */
+async function resolveLessonMediaUrl(
+  raw: string | null,
+  allowPrivate: boolean,
+): Promise<string | null> {
+  if (!raw) return null;
+  if (!allowPrivate) return null;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (!raw.startsWith(R2_VIDEO_PREFIX)) return raw;
+  const key = raw.slice(R2_VIDEO_PREFIX.length);
+  const signed = await createR2SignedDownloadUrl(key);
+  return signed?.url ?? null;
 }
 
 export async function listPublishedCourses() {
@@ -148,6 +164,13 @@ export async function getLessonBySlugs(input: {
     ? lesson.markdownBody
     : truncateMarkdown(lesson.markdownBody);
 
+  // C5.4 — private R2 media only for enrolled students / admins (never guests)
+  const allowPrivateMedia = canAccessFullContent(input.role);
+  const videoUrl = await resolveLessonMediaUrl(
+    lesson.videoUrl,
+    allowPrivateMedia,
+  );
+
   return {
     id: lesson.id,
     slug: lesson.slug,
@@ -155,7 +178,7 @@ export async function getLessonBySlugs(input: {
     isPreview: lesson.isPreview,
     gated: !fullAccess,
     markdownBody,
-    videoUrl: fullAccess ? lesson.videoUrl : null,
+    videoUrl,
     schematicKey: fullAccess || lesson.isPreview ? lesson.schematicKey : null,
     codeBundleKey: fullAccess ? lesson.codeBundleKey : null,
     course: {

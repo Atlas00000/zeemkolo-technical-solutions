@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { SignedIn, UserButton } from "@clerk/nextjs";
+import { BrandMark } from "@/design/BrandMark";
 import { cn } from "@/lib/utils";
 
 type MobileTopBarProps = {
@@ -28,18 +29,8 @@ export function MobileTopBar({
       )}
     >
       <div className="flex items-center justify-between gap-3 px-[var(--ln-page-x)] py-3.5">
-        <Link
-          href="/"
-          className={cn(
-            "shrink-0 font-display text-sm font-semibold tracking-[0.22em] text-[var(--ln-ink)] uppercase",
-            marketing && "dark:text-white",
-          )}
-        >
-          Zeemkolo
-          <span
-            className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-[var(--ln-signal)] align-middle shadow-[0_0_12px_var(--ln-signal)] dark:shadow-none"
-            aria-hidden
-          />
+        <Link href="/" className="shrink-0">
+          <BrandMark className={marketing ? "dark:text-white" : undefined} />
         </Link>
 
         <div className="flex shrink-0 items-center gap-1.5">

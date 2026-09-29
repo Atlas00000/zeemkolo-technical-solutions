@@ -1,12 +1,14 @@
 "use client";
 
+import Image from "next/image";
+import { MARKETING_ASSETS } from "@/design/marketing-assets";
 import { HeroPointerGlow } from "./HeroPointerGlow";
 import { HeroSchematic } from "./HeroSchematic";
 import { HeroScopeSweep } from "./HeroScopeSweep";
 import { useHeroPointer } from "./useHeroPointer";
 
 /**
- * Full-bleed visual plane — atmosphere + live schematic.
+ * Full-bleed visual plane — brand banner atmosphere + live schematic.
  * Mobile: field dominates the upper viewport. Desktop: right half.
  */
 export function HeroField() {
@@ -20,29 +22,35 @@ export function HeroField() {
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
       <div className="absolute inset-0 bg-[var(--ln-canvas)]" />
 
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `
-            radial-gradient(
-              ellipse 70% 55% at 85% 12%,
-              color-mix(in srgb, var(--ln-signal) 26%, transparent),
-              transparent 58%
-            ),
-            radial-gradient(
-              ellipse 45% 40% at 8% 88%,
-              color-mix(in srgb, var(--ln-ink) 7%, transparent),
-              transparent 55%
-            ),
-            linear-gradient(
-              148deg,
-              var(--ln-canvas) 0%,
-              var(--ln-canvas-elevated) 45%,
-              color-mix(in srgb, var(--ln-signal) 8%, var(--ln-canvas)) 100%
-            )
-          `,
-        }}
-      />
+      {/* C2 — Zeemble banner as masked brand plane (not a card) */}
+      <div className="absolute inset-0">
+        <Image
+          src={MARKETING_ASSETS.banners.zeemble}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[70%_35%] opacity-[0.22] dark:opacity-[0.28]"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `
+              linear-gradient(
+                105deg,
+                var(--ln-canvas) 0%,
+                color-mix(in srgb, var(--ln-canvas) 82%, transparent) 38%,
+                transparent 62%
+              ),
+              radial-gradient(
+                ellipse 70% 55% at 85% 12%,
+                color-mix(in srgb, var(--ln-signal) 18%, transparent),
+                transparent 58%
+              )
+            `,
+          }}
+        />
+      </div>
 
       <div
         className="absolute inset-[-12%] opacity-[0.5] dark:opacity-[0.32]"

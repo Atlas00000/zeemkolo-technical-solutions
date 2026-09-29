@@ -231,9 +231,7 @@ export async function getOrderByPaymentRef(paymentRef: string) {
 function serializeOrder(
   order: Awaited<ReturnType<typeof getOrderByPaymentRef>>,
 ) {
-  const digitalItems = order.items.filter(
-    (i) => i.product.type === ProductType.DIGITAL && i.product.digitalKey,
-  );
+  const digitalItems = order.items.filter((i) => i.product.digitalKey);
 
   return {
     id: order.id,

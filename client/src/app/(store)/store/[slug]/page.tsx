@@ -57,6 +57,14 @@ export default async function StoreProductPage({ params }: ProductPageProps) {
           <h1 className="mt-4 max-w-3xl font-display text-[clamp(1.75rem,4vw,2.75rem)] leading-[1.08] tracking-[-0.04em] text-[var(--ln-ink)]">
             {product.title}
           </h1>
+          {product.imageKey ? (
+            // eslint-disable-next-line @next/next/no-img-element -- catalog paths are static /store/*
+            <img
+              src={product.imageKey}
+              alt=""
+              className="mt-8 max-h-[28rem] w-full max-w-2xl object-cover"
+            />
+          ) : null}
           <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-[var(--ln-muted)] md:text-lg">
             {product.description}
           </p>

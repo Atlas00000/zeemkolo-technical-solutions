@@ -28,6 +28,15 @@ export function StoreStage() {
         {product.type === "DIGITAL" ? "Digital" : "Physical"}
       </p>
 
+      {product.imageKey ? (
+        // eslint-disable-next-line @next/next/no-img-element -- catalog paths are static /store/*
+        <img
+          src={product.imageKey}
+          alt=""
+          className="mt-5 max-h-56 w-full max-w-md object-cover"
+        />
+      ) : null}
+
       <h2 className="mt-4 font-display text-[clamp(1.75rem,3vw,2.5rem)] leading-[1.08] tracking-[-0.03em] text-[var(--ln-ink)]">
         <Link
           href={`/store/${product.slug}`}

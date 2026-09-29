@@ -265,10 +265,347 @@ Tip: include your MCU part number and what you already tried when asking for hel
     },
   });
 
+  // C1 — Drive/R2 kits (imageKey = public web path; digitalKey = private R2 spec)
+  await prisma.product.upsert({
+    where: { slug: "radar-kit" },
+    update: {
+      title: "Zeemble Radar Kit",
+      description:
+        "Smart distance radar and alert hardware kit — sensors, MCU wiring, and lab materials for the Zeemble Radar & Alert track.",
+      type: ProductType.PHYSICAL,
+      priceNgn: 6500000,
+      priceUsd: 5500,
+      stock: 20,
+      imageKey: "/store/radar-kit/image-1.png",
+      digitalKey: "store/radar-kit/download/radar-kit-spec.docx",
+      isPublished: true,
+    },
+    create: {
+      slug: "radar-kit",
+      title: "Zeemble Radar Kit",
+      description:
+        "Smart distance radar and alert hardware kit — sensors, MCU wiring, and lab materials for the Zeemble Radar & Alert track.",
+      type: ProductType.PHYSICAL,
+      priceNgn: 6500000,
+      priceUsd: 5500,
+      stock: 20,
+      imageKey: "/store/radar-kit/image-1.png",
+      digitalKey: "store/radar-kit/download/radar-kit-spec.docx",
+      isPublished: true,
+    },
+  });
+
+  await prisma.product.upsert({
+    where: { slug: "smart-irrigation-kit" },
+    update: {
+      title: "Zeemble Smart Irrigation Kit",
+      description:
+        "Hands-on smart irrigation kit for soil moisture sensing, pumps/valves, and MCU control labs aligned with the Zeemble Smart Irrigation course.",
+      type: ProductType.PHYSICAL,
+      priceNgn: 8500000,
+      priceUsd: 7500,
+      stock: 15,
+      imageKey: "/store/smart-irrigation-kit/image-1.png",
+      digitalKey:
+        "store/smart-irrigation-kit/download/smart-irrigation-kit-spec.docx",
+      isPublished: true,
+    },
+    create: {
+      slug: "smart-irrigation-kit",
+      title: "Zeemble Smart Irrigation Kit",
+      description:
+        "Hands-on smart irrigation kit for soil moisture sensing, pumps/valves, and MCU control labs aligned with the Zeemble Smart Irrigation course.",
+      type: ProductType.PHYSICAL,
+      priceNgn: 8500000,
+      priceUsd: 7500,
+      stock: 15,
+      imageKey: "/store/smart-irrigation-kit/image-1.png",
+      digitalKey:
+        "store/smart-irrigation-kit/download/smart-irrigation-kit-spec.docx",
+      isPublished: true,
+    },
+  });
+
+  // C3 — ZEEMBLE Smart Irrigation Challenge (skeleton; bodies filled in C4)
+  const irrigationStub = (lessonNo: number, title: string, sourceKey: string) =>
+    `# ${title}
+
+> Skeleton lesson for content population **C3**. Full markdown lands in **C4** from \`${sourceKey}\`.
+
+## Status
+- Course: Smart Irrigation Challenge (8 lessons)
+- Source body (R2): \`${sourceKey}\`
+
+Content conversion pending.
+`;
+
+  const irrigationLessons = [
+    {
+      slug: "smart-agriculture-intelligent-irrigation",
+      title: "Lesson 1 — Smart Agriculture & Intelligent Irrigation",
+      sortOrder: 1,
+      isPreview: true,
+      sourceKey: "lessons/smart-irrigation/lesson-01/body.docx",
+      schematicKey: null as string | null,
+    },
+    {
+      slug: "fundamental-principles-of-an-electric-circuit",
+      title: "Lesson 2 — Fundamental Principles of an Electric Circuit",
+      sortOrder: 2,
+      isPreview: false,
+      sourceKey: "lessons/smart-irrigation/lesson-02/body.docx",
+      schematicKey: null,
+    },
+    {
+      slug: "introduction-to-environmental-sensors",
+      title: "Lesson 3 — Introduction to Environmental Sensors",
+      sortOrder: 3,
+      isPreview: false,
+      sourceKey: "lessons/smart-irrigation/lesson-03/body.docx",
+      schematicKey: null,
+    },
+    {
+      slug: "build-your-first-smart-system",
+      title: "Lesson 4 — Build Your First Smart System",
+      sortOrder: 4,
+      isPreview: false,
+      sourceKey: "lessons/smart-irrigation/lesson-04/body.docx",
+      schematicKey: null,
+    },
+    {
+      slug: "signal-transmission",
+      title: "Lesson 5 — Signal Transmission",
+      sortOrder: 5,
+      isPreview: false,
+      sourceKey: "lessons/smart-irrigation/lesson-05/body.docx",
+      schematicKey: null,
+    },
+    {
+      slug: "make-device-talk",
+      title: "Lesson 6 — Make Device Talk",
+      sortOrder: 6,
+      isPreview: false,
+      sourceKey: "lessons/smart-irrigation/lesson-06/body.docx",
+      schematicKey: null,
+    },
+    {
+      slug: "manual-and-automatic-control",
+      title: "Lesson 7 — Manual and Automatic Control",
+      sortOrder: 7,
+      isPreview: false,
+      sourceKey: "lessons/smart-irrigation/lesson-07/body.docx",
+      schematicKey: null,
+    },
+    {
+      slug: "remote-control",
+      title: "Lesson 8 — Remote Control",
+      sortOrder: 8,
+      isPreview: false,
+      sourceKey: "lessons/smart-irrigation/lesson-08/body.docx",
+      schematicKey: null,
+    },
+  ] as const;
+
+  const irrigationOverview =
+    "This self-paced beginner course takes you from basic circuit principles to a working smart irrigation system. Across eight lessons you learn to read schematics, wire environmental sensors, drive pumps and valves with a microcontroller, send data over LoRa, and add remote monitoring and control — without assuming prior electronics experience. Follow along with the Zeemble Smart Irrigation Kit, or use equivalent parts from your own bench.";
+
+  const irrigationCourse = await prisma.course.upsert({
+    where: { slug: "smart-irrigation" },
+    update: {
+      title: "ZEEMBLE Smart Irrigation Challenge",
+      description: irrigationOverview,
+      isPublished: true,
+      sortOrder: 2,
+    },
+    create: {
+      slug: "smart-irrigation",
+      title: "ZEEMBLE Smart Irrigation Challenge",
+      description: irrigationOverview,
+      isPublished: true,
+      sortOrder: 2,
+    },
+  });
+
+  const irrigationModule = await prisma.module.upsert({
+    where: {
+      courseId_slug: {
+        courseId: irrigationCourse.id,
+        slug: "smart-irrigation-challenge",
+      },
+    },
+    update: {
+      title: "Smart Irrigation Challenge",
+      description:
+        "Eight lessons from farm problem framing through remote cloud control. Source pack: courses/smart-irrigation/summary.docx",
+      sortOrder: 1,
+    },
+    create: {
+      courseId: irrigationCourse.id,
+      slug: "smart-irrigation-challenge",
+      title: "Smart Irrigation Challenge",
+      description:
+        "Eight lessons from farm problem framing through remote cloud control. Source pack: courses/smart-irrigation/summary.docx",
+      sortOrder: 1,
+    },
+  });
+
+  for (const lesson of irrigationLessons) {
+    await prisma.lesson.upsert({
+      where: {
+        moduleId_slug: {
+          moduleId: irrigationModule.id,
+          slug: lesson.slug,
+        },
+      },
+      update: {
+        title: lesson.title,
+        sortOrder: lesson.sortOrder,
+        isPreview: lesson.isPreview,
+        isPublished: true,
+        // C7.3 — do not clobber C4 markdown / schematic / video on re-seed
+      },
+      create: {
+        moduleId: irrigationModule.id,
+        slug: lesson.slug,
+        title: lesson.title,
+        sortOrder: lesson.sortOrder,
+        isPreview: lesson.isPreview,
+        isPublished: true,
+        schematicKey: lesson.schematicKey,
+        markdownBody: irrigationStub(
+          lesson.sortOrder,
+          lesson.title,
+          lesson.sourceKey,
+        ),
+      },
+    });
+  }
+
+  // Ensure stubs exist for lessons still on placeholder (first seed / empty body)
+  for (const lesson of irrigationLessons) {
+    const row = await prisma.lesson.findUnique({
+      where: {
+        moduleId_slug: {
+          moduleId: irrigationModule.id,
+          slug: lesson.slug,
+        },
+      },
+    });
+    if (row && row.markdownBody.includes("**C3**")) {
+      await prisma.lesson.update({
+        where: { id: row.id },
+        data: {
+          title: lesson.title,
+          sortOrder: lesson.sortOrder,
+          isPreview: lesson.isPreview,
+          isPublished: true,
+          markdownBody: irrigationStub(
+            lesson.sortOrder,
+            lesson.title,
+            lesson.sourceKey,
+          ),
+        },
+      });
+    }
+  }
+
+  // C6 — Radar & Alert course (summary only; lesson pack not in Drive import)
+  const radarCourse = await prisma.course.upsert({
+    where: { slug: "radar-alert" },
+    update: {
+      title: "Zeemble Smart Distance Radar & Alert System",
+      description:
+        "Coming soon — course overview from the author pack. Pair with the Zeemble Radar Kit in the store while the full lesson pack is prepared.\n\nStore: [/store/radar-kit](/store/radar-kit)",
+      isPublished: true,
+      sortOrder: 3,
+    },
+    create: {
+      slug: "radar-alert",
+      title: "Zeemble Smart Distance Radar & Alert System",
+      description:
+        "Coming soon — course overview from the author pack. Pair with the Zeemble Radar Kit in the store while the full lesson pack is prepared.\n\nStore: [/store/radar-kit](/store/radar-kit)",
+      isPublished: true,
+      sortOrder: 3,
+    },
+  });
+
+  const radarModule = await prisma.module.upsert({
+    where: {
+      courseId_slug: {
+        courseId: radarCourse.id,
+        slug: "overview",
+      },
+    },
+    update: {
+      title: "Overview",
+      description:
+        "Source: courses/radar-alert/summary.docx. Full modules land when the lesson pack is imported.",
+      sortOrder: 1,
+    },
+    create: {
+      courseId: radarCourse.id,
+      slug: "overview",
+      title: "Overview",
+      description:
+        "Source: courses/radar-alert/summary.docx. Full modules land when the lesson pack is imported.",
+      sortOrder: 1,
+    },
+  });
+
+  await prisma.lesson.upsert({
+    where: {
+      moduleId_slug: {
+        moduleId: radarModule.id,
+        slug: "course-overview",
+      },
+    },
+    update: {
+      title: "Course overview & kit pairing",
+      isPreview: true,
+      isPublished: true,
+      sortOrder: 1,
+    },
+    create: {
+      moduleId: radarModule.id,
+      slug: "course-overview",
+      title: "Course overview & kit pairing",
+      isPreview: true,
+      isPublished: true,
+      sortOrder: 1,
+      markdownBody: `# Smart Distance Radar & Alert System
+
+This course is **scaffolded** from the author summary (\`courses/radar-alert/summary.docx\`). Detailed lab lessons are not in the current Drive import — status: **coming soon**.
+
+## What you can do now
+
+1. Read this overview (public preview).
+2. Order the hardware companion: **[Zeemble Radar Kit](/store/radar-kit)**.
+3. Continue with the published **[Smart Irrigation Challenge](/zeemble/courses/smart-irrigation)** while Radar labs are authored.
+
+## Honest publish state
+
+- Course: published (discoverable)
+- Labs: pending content pack (C6.2)
+`,
+    },
+  });
+
+  // C6.3 — keep radar kit description pointing at the course
+  await prisma.product.updateMany({
+    where: { slug: "radar-kit" },
+    data: {
+      description:
+        "Smart distance radar and alert hardware kit — sensors, MCU wiring, and lab materials for the Zeemble Radar & Alert track. Course overview: /zeemble/courses/radar-alert",
+    },
+  });
+
   console.log("Seed complete:", {
     admin: admin.email,
     matrics: matricCodes.length,
     course: course.slug,
+    irrigation: irrigationCourse.slug,
+    irrigationLessons: irrigationLessons.length,
+    radar: radarCourse.slug,
   });
 }
 

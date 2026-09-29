@@ -34,6 +34,7 @@ export function AdminStoreCms({
     priceNgn: 0,
     priceUsd: 0,
     stock: 0,
+    imageKey: "",
     digitalKey: "",
   });
 
@@ -59,6 +60,7 @@ export function AdminStoreCms({
               await adminCreateProduct(
                 {
                   ...form,
+                  imageKey: form.imageKey || null,
                   digitalKey: form.digitalKey || null,
                   isPublished: false,
                 },
@@ -141,6 +143,15 @@ export function AdminStoreCms({
             </label>
           </div>
           <label className="block text-[var(--ln-muted)]">
+            Image key (public path)
+            <input
+              className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
+              value={form.imageKey}
+              onChange={(e) => setForm({ ...form, imageKey: e.target.value })}
+              placeholder="/store/radar-kit/image-1.png"
+            />
+          </label>
+          <label className="block text-[var(--ln-muted)]">
             Digital key (R2)
             <input
               className="mt-1 w-full border border-[var(--ln-hairline-strong)] bg-[var(--ln-canvas-elevated)] px-2 py-1"
@@ -219,6 +230,11 @@ export function AdminStoreCms({
                 Published
               </label>
             </div>
+            {p.imageKey ? (
+              <p className="mt-1 font-mono text-xs text-[var(--ln-muted)]">
+                imageKey: {p.imageKey}
+              </p>
+            ) : null}
             {p.digitalKey ? (
               <p className="mt-1 font-mono text-xs text-[var(--ln-muted)]">
                 digitalKey: {p.digitalKey}

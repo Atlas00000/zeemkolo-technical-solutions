@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
+import { MARKETING_ASSETS } from "@/design/marketing-assets";
 import { useCta } from "./useCta";
 
 /**
- * Full-bleed close field — vermilion wash tracks pointer + active step.
+ * Full-bleed close field — brand banner wash tracks pointer + active step.
  */
 export function CtaField() {
   const { activeStep, pointer, reducedMotion } = useCta();
@@ -18,6 +20,15 @@ export function CtaField() {
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <div className="absolute inset-0">
+        <Image
+          src={MARKETING_ASSETS.banners.banner3}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-center opacity-[0.14] dark:opacity-[0.18]"
+        />
+      </div>
       <div
         className="absolute inset-0"
         style={{
@@ -29,8 +40,8 @@ export function CtaField() {
             ),
             linear-gradient(
               155deg,
-              var(--ln-canvas-elevated) 0%,
-              var(--ln-canvas) 45%,
+              color-mix(in srgb, var(--ln-canvas-elevated) 88%, transparent) 0%,
+              color-mix(in srgb, var(--ln-canvas) 90%, transparent) 45%,
               color-mix(in srgb, var(--ln-signal) 8%, var(--ln-canvas-elevated)) 100%
             )
           `,
