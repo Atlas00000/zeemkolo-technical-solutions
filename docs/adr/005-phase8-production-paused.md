@@ -1,22 +1,27 @@
-# ADR-005: Phase 8 production paused
+# ADR-005: Phase 8 production paused → unlocked
 
-- **Status:** Accepted
+- **Status:** Superseded (unlocked)
 - **Date:** 2026-09-11
+- **Unlocked:** 2026-09-29
 
 ## Context
 
-Roadmap Phase 8 covers Railway + Vercel deploy, env wiring, DNS/`zeemkolo.com` cutover, and live QR verification. The owner has paused production cutover pending explicit sign-off.
+Roadmap Phase 8 covers Railway + Vercel deploy, env wiring, DNS/`zeemkolo.com` cutover, and live QR verification. Cutover was paused pending owner sign-off.
 
-## Decision
+## Decision (original)
 
 **Do not** execute Phase 8 (public DNS cutover / production launch) until the owner signs off.
 
-- Local/dev and optimization phases (O0+) may continue.
-- Deploy *prep* (Dockerfiles, env examples, runbooks) is allowed.
-- Live `zeemkolo.com` traffic switch is **out of scope** until unlocked.
+## Unlock (2026-09-29)
+
+Owner authorized custom-domain cutover via CLI:
+
+- Site: `www.zeemkolo.com` (canonical) + apex `zeemkolo.com` → Vercel `zeemkolo-client`
+- API: `api.zeemkolo.com` → Railway `zeemkolo-server`
+
+Live DNS records at the third-party registrar remain an owner/ops step using the records printed by Vercel/Railway CLIs. Clerk dashboard allow-lists remain a manual Clerk console step.
 
 ## Consequences
 
-- Optimization work (admin, R2, CI, etc.) proceeds without waiting on DNS.
-- Agents must not “helpfully” point production DNS or assume production secrets.
-- Revisit this ADR when sign-off is given; then execute Phase 8 from `roadmap.md`.
+- Agents may attach domains, update `CORS_ORIGIN` / `NEXT_PUBLIC_API_URL`, and redeploy for this cutover.
+- Do not delete the Railway `*.up.railway.app` fallback domain unless explicitly asked.

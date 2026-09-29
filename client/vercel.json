@@ -1,5 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "zeemkolo.com" }],
+      "destination": "https://www.zeemkolo.com/:path*",
+      "permanent": true
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 # Deployment guide — Railway (API + DB) + Vercel (client)
 
-Deploy prep for the Zeemkolo monorepo. **Live DNS cutover for `zeemkolo.com` stays paused** until owner sign-off ([ADR-005](docs/adr/005-phase8-production-paused.md)). This guide gets staging/production *services* running; do not point production DNS until unlocked.
+Deploy prep for the Zeemkolo monorepo. **Custom domain cutover unlocked 2026-09-29** ([ADR-005](docs/adr/005-phase8-production-paused.md) superseded). Site: `www.zeemkolo.com` (Vercel); API: `api.zeemkolo.com` (Railway). DNS records at the third-party registrar still must match §3.4.
 
 | Piece | Platform | Source |
 | :--- | :--- | :--- |
@@ -151,9 +151,39 @@ curl -sS -o /dev/null -w "%{http_code}\n" https://YOUR_APP.vercel.app/
 
 Expect `200`. Open the site, sign-in modal, and a data page that hits the API (e.g. store / forum).
 
-### 3.4 Custom domain (later)
+### 3.4 Custom domain (live)
 
-After ADR-005 unlock: add `zeemkolo.com` / `www` in Vercel → Domains, then update Clerk allowed origins and Railway `CORS_ORIGIN`.
+**Unlocked 2026-09-29** (ADR-005 superseded). Topology:
+
+| Host | Platform | Notes |
+| :--- | :--- | :--- |
+| `www.zeemkolo.com` | Vercel `zeemkolo-client` | Canonical site |
+| `zeemkolo.com` | Vercel `zeemkolo-client` | 308 → `www` via `client/vercel.json` |
+| `api.zeemkolo.com` | Railway `zeemkolo-server` | API; keep `*.up.railway.app` fallback |
+
+#### DNS at registrar (qservers / third-party NS)
+
+Nameservers today: `ns1.qservers.net`, `ns2.qservers.net`. Add/replace records:
+
+| Type | Name / host | Value |
+| :--- | :--- | :--- |
+| **A** | `@` (apex) | `216.198.79.1` |
+| **A** | `@` (apex) | `64.29.17.1` |
+| **CNAME** | `www` | `b9614653dd3d0623.vercel-dns-017.com.` |
+| **CNAME** | `api` | `4l822j7x.up.railway.app` |
+| **TXT** | `_railway-verify.api` | `railway-verify=3b36b79d1a08d5e081b6a909dc72fd99b49d303a9e48b2b5a038449d7dac4115` |
+
+Fallback A for apex (if provider allows only one A): `76.76.21.21`.  
+After DNS propagates: `vercel domains verify zeemkolo.com`, `vercel domains verify www.zeemkolo.com`, `railway domain status api.zeemkolo.com -s zeemkolo-server`.
+
+#### Env (already set via CLI)
+
+- Railway `CORS_ORIGIN`: includes `https://www.zeemkolo.com`, `https://zeemkolo.com`, `https://zeemkolo-client.vercel.app`, `http://localhost:3000`
+- Vercel `NEXT_PUBLIC_API_URL` (Production + Preview): `https://api.zeemkolo.com`
+
+#### Clerk (manual)
+
+Add `https://www.zeemkolo.com` and `https://zeemkolo.com` to allowed origins / redirect URLs. Webhook URL: `https://api.zeemkolo.com/auth/webhooks/clerk`.
 
 ---
 
@@ -215,7 +245,7 @@ docker build -t zeemkolo-server .
 - [ ] `CORS_ORIGIN` includes the Vercel origin
 - [ ] Clerk keys + webhook aligned with API URL
 - [ ] Smoke: home, sign-in, one authenticated API call
-- [ ] DNS/`zeemkolo.com` cutover **only** after ADR-005 sign-off
+- [x] DNS/`zeemkolo.com` cutover authorized — attach domains + env via CLI; **registrar DNS records still required** (§3.4)
 
 ---
 
