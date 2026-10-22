@@ -265,6 +265,34 @@ Tip: include your MCU part number and what you already tried when asking for hel
     },
   });
 
+  // Temporary live Paystack smoke SKU — unpublish/delete after go-live checks.
+  await prisma.product.upsert({
+    where: { slug: "paystack-smoke-pass" },
+    update: {
+      title: "Paystack Smoke Pass (temp)",
+      description:
+        "Temporary ₦500 digital item for live payment smoke tests. Safe to unpublish after cutover.",
+      type: ProductType.DIGITAL,
+      priceNgn: 50_000, // ₦500.00
+      priceUsd: 50, // $0.50
+      stock: 9999,
+      digitalKey: "ebooks/paystack-smoke-pass.txt",
+      isPublished: true,
+    },
+    create: {
+      slug: "paystack-smoke-pass",
+      title: "Paystack Smoke Pass (temp)",
+      description:
+        "Temporary ₦500 digital item for live payment smoke tests. Safe to unpublish after cutover.",
+      type: ProductType.DIGITAL,
+      priceNgn: 50_000,
+      priceUsd: 50,
+      stock: 9999,
+      digitalKey: "ebooks/paystack-smoke-pass.txt",
+      isPublished: true,
+    },
+  });
+
   // C1 — Drive/R2 kits (imageKey = public web path; digitalKey = private R2 spec)
   await prisma.product.upsert({
     where: { slug: "radar-kit" },
