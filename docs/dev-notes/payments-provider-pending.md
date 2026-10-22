@@ -1,27 +1,18 @@
-# Dev note — payments provider selection (pending)
+# Dev note — payments (Paystack)
 
-**Status:** Payment rails are **not locked** yet. Paystack vs Stripe (or both / another provider) is still under selection.
+**Status:** Paystack is the store checkout rail (Phases 1–2 implemented).  
+**Plan:** [paystack-integration.md](./paystack-integration.md)  
+**ADR:** [ADR-004](../adr/004-payment-provider-placeholder.md) (transitional — still mentions Flutterwave until Phase 3 polish)
 
-**Intent:** Finish the production payment handoff (hosted checkout / modal, live webhook secrets, currency routing) only after the provider choice is confirmed.
+## Runtime
 
-## What to do for now
+- UI creates orders with `paymentProvider: "paystack"` and calls `POST /store/orders/:id/paystack/initialize`.
+- Without `PAYSTACK_SECRET_KEY`, initialize returns `dev_placeholder` → `confirm-test` (404 in production).
+- Webhook: `POST /payments/webhooks/paystack` (HMAC + optional verify).
 
-- Treat Paystack/Stripe UI labels, webhook routes, and env keys as **scaffolding / placeholders**.
-- Local checkout may use `POST /store/orders/:id/confirm-test` to simulate a successful payment so inventory, order status, and digital downloads can be verified without a live gateway.
-- Fill real gateway secrets and public keys in `.env` only when a provider is chosen; empty placeholders in `.env.example` are intentional.
-- Precise infra details still TBD (merchant accounts, webhook endpoints on Railway, success/cancel URLs, NGN vs USD primary rail) — use stubs until those are decided.
+## Local checklist
 
-## Already in place (provider-agnostic)
-
-- Catalog + cart + order create (`PENDING` + Redis reservation)
-- Confirm paid → decrement stock → expose timed digital download grants
-- Webhook handler shapes for Paystack / Stripe signatures (activate when secrets exist)
-
-## When selection is final
-
-1. Lock provider(s) and currencies in this note (or replace with a short ADR).
-2. Wire real checkout session / initialize-transaction calls from `/store/checkout`.
-3. Point production webhooks at `/payments/webhooks/{provider}` with verified secrets.
-4. Remove or gate `confirm-test` so it cannot run in production (already 404 when `NODE_ENV=production`).
-
-*— Zeemkolo store / Phase 5*
+1. `PAYSTACK_SECRET_KEY=sk_test_…` + `PAYMENT_CALLBACK_BASE_URL=http://localhost:3000` in `server/.env`
+2. Checkout → Paystack test card → return to order page → `POST …/paystack/confirm` marks PAID (no tunnel required)
+3. Optional webhook: tunnel API `:5000` and set Test Webhook URL to `https://<tunnel>/payments/webhooks/paystack`
+4. Prefer `sk_test_…` for local; keep `sk_live_…` for production only

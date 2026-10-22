@@ -378,7 +378,11 @@ export type StoreOrder = {
     };
   }[];
   downloadsAvailable: { productId: string; slug: string; title: string }[];
-  checkout?: { message: string; paymentRef: string | null };
+  checkout?: {
+    message: string;
+    paymentRef: string | null;
+    provider?: string | null;
+  };
 };
 
 export function fetchStoreProducts(currency: "NGN" | "USD" = "NGN") {
@@ -400,7 +404,7 @@ export function createStoreOrder(
   input: {
     email: string;
     currency: "NGN" | "USD";
-    paymentProvider: "paystack" | "stripe";
+    paymentProvider: "paystack" | "stripe" | "flutterwave";
     items: { productId: string; quantity: number }[];
   },
   token?: string,
@@ -414,6 +418,55 @@ export function createStoreOrder(
 
 export function fetchStoreOrder(orderId: string) {
   return apiFetch<StoreOrder>(`/store/orders/${orderId}`);
+}
+
+export type FlutterwaveInitResponse =
+  | {
+      mode: "flutterwave";
+      paymentUrl: string;
+      reference: string;
+      useConfirmTest?: false;
+    }
+  | {
+      mode: "dev_placeholder";
+      paymentUrl: null;
+      reference: string;
+      useConfirmTest: true;
+    };
+
+export type PaystackInitResponse =
+  | {
+      mode: "paystack";
+      paymentUrl: string;
+      reference: string;
+      useConfirmTest?: false;
+    }
+  | {
+      mode: "dev_placeholder";
+      paymentUrl: null;
+      reference: string;
+      useConfirmTest: true;
+    };
+
+export function initializeFlutterwaveCheckout(orderId: string) {
+  return apiFetch<FlutterwaveInitResponse>(
+    `/store/orders/${orderId}/flutterwave/initialize`,
+    { method: "POST" },
+  );
+}
+
+export function initializePaystackCheckout(orderId: string) {
+  return apiFetch<PaystackInitResponse>(
+    `/store/orders/${orderId}/paystack/initialize`,
+    { method: "POST" },
+  );
+}
+
+/** Verify Paystack charge and mark order paid (return-path / local E2E). */
+export function confirmPaystackCheckout(orderId: string) {
+  return apiFetch<StoreOrder>(`/store/orders/${orderId}/paystack/confirm`, {
+    method: "POST",
+  });
 }
 
 export function confirmStoreOrderTest(orderId: string) {

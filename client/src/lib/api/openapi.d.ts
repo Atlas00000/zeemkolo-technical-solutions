@@ -341,6 +341,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/payments/webhooks/flutterwave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Flutterwave webhook (verif-hash header) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/store/orders/{orderId}/flutterwave/initialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Initialize Flutterwave Standard checkout for a PENDING order */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description paymentUrl or dev_placeholder */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payments/webhooks/paystack": {
         parameters: {
             query?: never;
@@ -350,7 +420,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Paystack webhook (HMAC over raw body) */
+        /** Paystack webhook (HMAC over raw body) — legacy scaffolding */
         post: {
             parameters: {
                 query?: never;
@@ -384,7 +454,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Stripe webhook (signature over raw body) */
+        /** Stripe webhook (signature over raw body) — legacy scaffolding */
         post: {
             parameters: {
                 query?: never;

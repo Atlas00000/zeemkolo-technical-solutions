@@ -1,5 +1,7 @@
+import { createHmac } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
+import { env } from "../../config/env.js";
 import { prisma } from "../../config/db.js";
 import { redis } from "../../config/redis.js";
 
@@ -64,14 +66,14 @@ describe("store routes (Phase 5)", () => {
     expect(product.stock).toBe(startingStock - 1);
   });
 
-  it("Paystack webhook confirms by paymentRef", async () => {
+  it("Flutterwave webhook confirms by paymentRef", async () => {
     const created = await app.inject({
       method: "POST",
       url: "/store/orders",
       payload: {
         email: "phase5-webhook@example.com",
         currency: "USD",
-        paymentProvider: "paystack",
+        paymentProvider: "flutterwave",
         items: [{ productId, quantity: 1 }],
       },
     });
@@ -79,11 +81,125 @@ describe("store routes (Phase 5)", () => {
 
     const webhook = await app.inject({
       method: "POST",
-      url: "/payments/webhooks/paystack",
+      url: "/payments/webhooks/flutterwave",
       payload: {
-        event: "charge.success",
-        data: { reference: order.paymentRef, status: "success" },
+        event: "charge.completed",
+        data: { tx_ref: order.paymentRef, status: "successful" },
       },
+    });
+    expect(webhook.statusCode).toBe(200);
+    expect(webhook.json().ignored).toBe(false);
+    expect(["PAID", "FULFILLED"]).toContain(webhook.json().order.status);
+  });
+
+  it("flutterwave initialize returns dev_placeholder without keys", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/store/orders",
+      payload: {
+        email: "phase5-flw-init@example.com",
+        currency: "NGN",
+        paymentProvider: "flutterwave",
+        items: [{ productId, quantity: 1 }],
+      },
+    });
+    expect(created.statusCode).toBe(201);
+    const order = created.json();
+
+    const init = await app.inject({
+      method: "POST",
+      url: `/store/orders/${order.id}/flutterwave/initialize`,
+    });
+    expect(init.statusCode).toBe(200);
+    expect(init.json().mode).toBe("dev_placeholder");
+    expect(init.json().useConfirmTest).toBe(true);
+  });
+
+  it("paystack confirm returns 402 when charge not successful", async () => {
+    if (!env.PAYSTACK_SECRET_KEY) return;
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/store/orders",
+      payload: {
+        email: "phase5-paystack-confirm@example.com",
+        currency: "NGN",
+        paymentProvider: "paystack",
+        items: [{ productId, quantity: 1 }],
+      },
+    });
+    expect(created.statusCode).toBe(201);
+    const order = created.json();
+
+    const confirm = await app.inject({
+      method: "POST",
+      url: `/store/orders/${order.id}/paystack/confirm`,
+    });
+    // Fake zk_ ref will not be successful on Paystack.
+    expect(confirm.statusCode).toBe(402);
+  });
+
+  it("paystack initialize returns paymentUrl or dev_placeholder", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/store/orders",
+      payload: {
+        email: "phase5-paystack-init@example.com",
+        currency: "NGN",
+        paymentProvider: "paystack",
+        items: [{ productId, quantity: 1 }],
+      },
+    });
+    expect(created.statusCode).toBe(201);
+    const order = created.json();
+
+    const init = await app.inject({
+      method: "POST",
+      url: `/store/orders/${order.id}/paystack/initialize`,
+    });
+    expect(init.statusCode).toBe(200);
+    const body = init.json();
+    if (env.PAYSTACK_SECRET_KEY) {
+      expect(body.mode).toBe("paystack");
+      expect(body.paymentUrl).toMatch(/^https:\/\//);
+      expect(body.reference).toBe(order.paymentRef);
+    } else {
+      expect(body.mode).toBe("dev_placeholder");
+      expect(body.useConfirmTest).toBe(true);
+    }
+  });
+
+  it("Paystack webhook confirms by paymentRef", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/store/orders",
+      payload: {
+        email: "phase5-paystack@example.com",
+        currency: "USD",
+        paymentProvider: "paystack",
+        items: [{ productId, quantity: 1 }],
+      },
+    });
+    const order = created.json();
+    const payload = {
+      event: "charge.success",
+      data: { reference: order.paymentRef, status: "success" },
+    };
+    const raw = JSON.stringify(payload);
+    const headers: Record<string, string> = {
+      "content-type": "application/json",
+    };
+    if (env.PAYSTACK_SECRET_KEY) {
+      headers["x-paystack-signature"] = createHmac("sha512", env.PAYSTACK_SECRET_KEY)
+        .update(raw)
+        .digest("hex");
+    }
+
+    const webhook = await app.inject({
+      method: "POST",
+      url: "/payments/webhooks/paystack",
+      headers,
+      payload: raw,
     });
     expect(webhook.statusCode).toBe(200);
     expect(webhook.json().ignored).toBe(false);

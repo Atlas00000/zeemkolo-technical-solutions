@@ -101,7 +101,7 @@ export async function createOrder(input: {
   currency: Currency;
   items: CartLine[];
   userId?: string;
-  paymentProvider: "paystack" | "stripe";
+  paymentProvider: "paystack" | "stripe" | "flutterwave";
 }) {
   // Opportunistic cleanup of PENDING orders past reservation window.
   await sweepExpiredPendingOrders(25);

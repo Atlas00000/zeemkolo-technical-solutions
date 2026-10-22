@@ -51,7 +51,7 @@ Full agent/contributor guide: **`AGENTS.md`** · **`CONTRIBUTING.md`**
 
 - API: **Fastify** ([ADR-002](docs/adr/002-fastify-api.md))
 - Identity: **Clerk**; app RBAC + matric in Postgres ([ADR-001](docs/adr/001-clerk-identity.md), [ADR-003](docs/adr/003-auto-matric-at-signup.md))
-- Payments: **placeholder** until provider selection ([ADR-004](docs/adr/004-payment-provider-placeholder.md))
+- Payments: **Flutterwave** ([ADR-004](docs/adr/004-payment-provider-placeholder.md))
 - Phase 8 production cutover: **paused** ([ADR-005](docs/adr/005-phase8-production-paused.md))
 - Storage: **Cloudflare R2** (local fallback until optimization O2)
 

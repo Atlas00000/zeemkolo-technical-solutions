@@ -277,7 +277,7 @@ model Order {
   status          OrderStatus @default(PENDING)
   currency        Currency
   totalAmount     Int         @map("total_amount") // lowest currency unit
-  paymentProvider String?     @map("payment_provider") // paystack | stripe
+  paymentProvider String?     @map("payment_provider") // flutterwave | paystack | stripe
   paymentRef      String?     @unique @map("payment_ref")
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")

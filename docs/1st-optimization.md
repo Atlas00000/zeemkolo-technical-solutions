@@ -11,7 +11,7 @@
 | Item | Decision |
 | :--- | :--- |
 | **Phase 8 — Production launch** | **Paused** until explicit sign-off |
-| **Payments** | Keep **placeholders** (`confirm-test` / scaffold webhooks) until provider selection is final |
+| **Payments** | **Flutterwave** live rail (`initialize` + webhook); `confirm-test` for local without keys |
 | **R2 object storage** | Included in this optimization track (next implementation work) |
 | **Admin access + custom admin panel** | Included in this optimization track |
 | **Production content** | Included in this optimization track |
@@ -155,7 +155,7 @@
 | O4.4 | Pagination | Cursor/limit on admin lists, forum threads, orders | Default page size enforced |
 | O4.5 | OpenAPI | Generate/publish OpenAPI from Zod/Fastify schemas | `/docs` or `openapi.json` checked into CI diff |
 | O4.6 | Reservation semantics | Document + test PENDING order / slot lock expiry behavior | Single written rule + tests for stock & slots |
-| O4.7 | Webhook readiness | Raw-body signature path ready for future Paystack/Stripe | Documented; still placeholder providers |
+| O4.7 | Webhook readiness | Flutterwave `verif-hash` + legacy Paystack/Stripe scaffolds | Flutterwave locked in ADR-004 |
 
 **Shipped:**
 - `sendApiError` / global error handler; middleware + controllers use envelope
@@ -305,7 +305,7 @@
 | Item | Reason |
 | :--- | :--- |
 | DNS / `zeemkolo.com` cutover | Phase 8 paused pending sign-off |
-| Live Paystack/Stripe checkout | Provider still under selection; placeholders remain |
+| Live Flutterwave checkout | Implemented — set FLW keys + webhook URL on Railway |
 | Full shadcn rewrite before backend solid | Wait for O3–O5 sign-off |
 | Large infra multi-region / K8s | Premature |
 
@@ -342,7 +342,7 @@ O4 should start as soon as O0 completes (does not need to wait for all content).
 | Content | At least one non-seed course path and product editable via admin |
 | Contract | OpenAPI published; idempotent booking/order POSTs; uniform errors |
 | Quality | CI + Sentry + critical E2E smokes green |
-| Payments | Still placeholder (by design) |
+| Payments | Flutterwave (ADR-004) |
 | Production | Still not cut over (by design) until Phase 8 sign-off |
 
 ---

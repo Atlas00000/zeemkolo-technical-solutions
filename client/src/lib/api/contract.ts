@@ -33,6 +33,8 @@ export const OPENAPI_PATHS = Object.freeze([
   "/admin/orders",
   "/admin/consultations",
   "/forum/threads",
+  "/payments/webhooks/flutterwave",
+  "/store/orders/{orderId}/flutterwave/initialize",
   "/payments/webhooks/paystack",
   "/payments/webhooks/stripe",
   "/openapi.json",

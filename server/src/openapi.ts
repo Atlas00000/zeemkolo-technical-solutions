@@ -148,15 +148,56 @@ export const openApiDocument = {
         responses: { "200": { description: "Paginated threads" } },
       },
     },
+    "/payments/webhooks/flutterwave": {
+      post: {
+        summary: "Flutterwave webhook (verif-hash header)",
+        responses: { "200": { description: "Accepted" } },
+      },
+    },
+    "/store/orders/{orderId}/paystack/initialize": {
+      post: {
+        summary: "Initialize Paystack Standard checkout for a PENDING order",
+        parameters: [
+          { name: "orderId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          "200": { description: "paymentUrl or dev_placeholder" },
+        },
+      },
+    },
+    "/store/orders/{orderId}/paystack/confirm": {
+      post: {
+        summary:
+          "Verify Paystack charge by paymentRef and mark order paid (return-path)",
+        parameters: [
+          { name: "orderId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          "200": { description: "Order PAID/FULFILLED" },
+          "402": { description: "Payment not yet successful on Paystack" },
+        },
+      },
+    },
+    "/store/orders/{orderId}/flutterwave/initialize": {
+      post: {
+        summary: "Initialize Flutterwave Standard checkout for a PENDING order (legacy)",
+        parameters: [
+          { name: "orderId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          "200": { description: "paymentUrl or dev_placeholder" },
+        },
+      },
+    },
     "/payments/webhooks/paystack": {
       post: {
-        summary: "Paystack webhook (HMAC over raw body)",
+        summary: "Paystack webhook (HMAC SHA512 over raw body)",
         responses: { "200": { description: "Accepted" } },
       },
     },
     "/payments/webhooks/stripe": {
       post: {
-        summary: "Stripe webhook (signature over raw body)",
+        summary: "Stripe webhook (signature over raw body) — legacy scaffolding",
         responses: { "200": { description: "Accepted" } },
       },
     },

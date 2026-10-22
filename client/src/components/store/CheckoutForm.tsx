@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   confirmStoreOrderTest,
   createStoreOrder,
+  initializePaystackCheckout,
 } from "@/lib/api-client";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/design/primitives/Button";
@@ -12,10 +12,8 @@ import { Input } from "@/design/primitives/Input";
 
 export function CheckoutForm() {
   const cart = useCart();
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [currency, setCurrency] = useState<"NGN" | "USD">("NGN");
-  const [provider, setProvider] = useState<"paystack" | "stripe">("paystack");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,19 +29,30 @@ export function CheckoutForm() {
       const order = await createStoreOrder({
         email,
         currency,
-        paymentProvider: provider,
+        paymentProvider: "paystack",
         items: cart.items.map((i) => ({
           productId: i.productId,
           quantity: i.quantity,
         })),
       });
 
-      await confirmStoreOrderTest(order.id);
+      const init = await initializePaystackCheckout(order.id);
+
+      if (init.mode === "dev_placeholder" || init.useConfirmTest) {
+        await confirmStoreOrderTest(order.id);
+        cart.clear();
+        window.location.assign(`/store/orders/${order.id}`);
+        return;
+      }
+
+      if (!init.paymentUrl) {
+        throw new Error("Payment URL missing from Paystack");
+      }
+
       cart.clear();
-      router.push(`/store/orders/${order.id}`);
+      window.location.assign(init.paymentUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
-    } finally {
       setBusy(false);
     }
   }
@@ -90,29 +99,9 @@ export function CheckoutForm() {
         </label>
       </fieldset>
 
-      <fieldset className="text-sm text-[var(--ln-muted)]">
-        <legend className="mb-2 font-medium text-[var(--ln-ink)]">
-          Payment
-        </legend>
-        <label className="mr-4">
-          <input
-            type="radio"
-            name="provider"
-            checked={provider === "paystack"}
-            onChange={() => setProvider("paystack")}
-          />{" "}
-          Paystack
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="provider"
-            checked={provider === "stripe"}
-            onChange={() => setProvider("stripe")}
-          />{" "}
-          Stripe
-        </label>
-      </fieldset>
+      <p className="text-sm text-[var(--ln-muted)]">
+        Payment via <span className="text-[var(--ln-ink)]">Paystack</span>
+      </p>
 
       <ul className="space-y-1 border-t border-[var(--ln-hairline)] pt-4 text-sm text-[var(--ln-ink)]">
         {cart.items.map((item) => (
@@ -129,12 +118,8 @@ export function CheckoutForm() {
       ) : null}
 
       <Button type="submit" disabled={busy || !cart.items.length}>
-        {busy ? "Processing…" : "Pay & confirm (dev)"}
+        {busy ? "Redirecting…" : "Pay with Paystack"}
       </Button>
-      <p className="text-xs text-[var(--ln-faint)]">
-        Payment provider still under selection — checkout uses a local confirm
-        placeholder until the live rail is chosen.
-      </p>
     </form>
   );
 }

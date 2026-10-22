@@ -46,7 +46,7 @@ async function main() {
         body: JSON.stringify({
           email: "phase5-smoke@example.com",
           currency: "USD",
-          paymentProvider: "paystack",
+          paymentProvider: "flutterwave",
           items: [{ productId: digital.id, quantity: 1 }],
         }),
       });

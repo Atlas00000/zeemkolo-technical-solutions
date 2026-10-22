@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { StoreOrder } from "@/lib/api-client";
-import { requestStoreDownload } from "@/lib/api-client";
+import {
+  confirmPaystackCheckout,
+  fetchStoreOrder,
+  requestStoreDownload,
+} from "@/lib/api-client";
 import { Badge } from "@/design/primitives/Badge";
 import { Button } from "@/design/primitives/Button";
 import { Text } from "@/design/primitives/Text";
@@ -15,9 +19,60 @@ type OrderSuccessCardProps = {
   order: StoreOrder;
 };
 
-export function OrderSuccessCard({ order }: OrderSuccessCardProps) {
+const PENDING_POLL_MS = 2500;
+const PENDING_POLL_MAX = 48; // ~2 minutes
+
+export function OrderSuccessCard({ order: initial }: OrderSuccessCardProps) {
+  const [order, setOrder] = useState(initial);
   const [message, setMessage] = useState<string | null>(null);
   const tone = orderTone(order.status as OrderLifecycle);
+  const isPending = order.status === "PENDING";
+  const isPaystack = order.paymentProvider === "paystack";
+
+  useEffect(() => {
+    if (!isPending) return;
+
+    let attempts = 0;
+    let cancelled = false;
+
+    async function refresh() {
+      attempts += 1;
+      try {
+        if (isPaystack) {
+          try {
+            const confirmed = await confirmPaystackCheckout(order.id);
+            if (cancelled) return;
+            setOrder(confirmed);
+            if (confirmed.status !== "PENDING") return true;
+          } catch {
+            // Not paid yet / verify pending — fall through to poll GET.
+          }
+        }
+        const next = await fetchStoreOrder(order.id);
+        if (cancelled) return;
+        setOrder(next);
+        return next.status !== "PENDING";
+      } catch {
+        return false;
+      }
+    }
+
+    void refresh();
+
+    const timer = window.setInterval(() => {
+      void (async () => {
+        const done = await refresh();
+        if (done || attempts >= PENDING_POLL_MAX) {
+          window.clearInterval(timer);
+        }
+      })();
+    }, PENDING_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [isPending, isPaystack, order.id]);
 
   async function download(productId: string) {
     setMessage(null);
@@ -33,17 +88,28 @@ export function OrderSuccessCard({ order }: OrderSuccessCardProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Text variant="eyebrow">Order confirmed</Text>
+        <Text variant="eyebrow">
+          {isPending ? "Awaiting payment" : "Order confirmed"}
+        </Text>
         <Badge tone={tone}>{order.status}</Badge>
       </div>
       <Text variant="title" className="text-3xl">
-        Thank you
+        {isPending ? "Payment in progress" : "Thank you"}
       </Text>
       <Text variant="muted">
-        Total{" "}
-        <span className="ln-tabular text-[var(--ln-ink)]">
-          {order.total.formatted}
-        </span>
+        {isPending
+          ? "If you just paid with Paystack, we are confirming your payment…"
+          : "Total "}
+        {!isPending ? (
+          <span className="ln-tabular text-[var(--ln-ink)]">
+            {order.total.formatted}
+          </span>
+        ) : (
+          <span className="ln-tabular text-[var(--ln-ink)]">
+            {" "}
+            {order.total.formatted}
+          </span>
+        )}
       </Text>
       <Text variant="meta">
         Ref {order.paymentRef} · {order.email}

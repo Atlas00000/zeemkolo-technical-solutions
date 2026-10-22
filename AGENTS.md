@@ -46,7 +46,7 @@ On this Windows machine, `docker-compose` (hyphen) is used if `docker compose` i
 | `RESEND_API_KEY` | server | Optional | Email skipped if empty |
 | `R2_*` / `R2_REQUIRED` | server | Optional in dev; required in prod / when `R2_REQUIRED=true` | See `docs/runbooks/r2-storage.md` |
 | `UPLOAD_DIR` | server | Dev fallback | Local consultation uploads when R2 unset |
-| `PAYSTACK_*` / `STRIPE_*` | server | Placeholder | See payments ADR |
+| `PAYSTACK_SECRET_KEY` / `PAYMENT_CALLBACK_BASE_URL` | server | For live store checkout | See `docs/dev-notes/paystack-integration.md`; Flutterwave env is legacy |
 
 **Secrets policy:** never commit `.env`, `server/.env`, or `client/.env.local`. Only empty placeholders belong in `.env.example`. Rotate keys if leaked.
 
@@ -73,7 +73,7 @@ See `docs/adr/`:
 - Fastify (not Express)
 - Clerk for auth; Postgres for RBAC + matric
 - Auto-assign matric at signup
-- Payment provider still placeholder
+- Payment provider: Paystack (Flutterwave/Stripe scaffolding unused)
 - Phase 8 production cutover paused until owner sign-off
 
 ## Coding norms

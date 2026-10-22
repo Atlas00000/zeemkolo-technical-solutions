@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { Currency } from "@prisma/client";
+import { Currency, OrderStatus } from "@prisma/client";
 import { z } from "zod";
 import { optionalAuth } from "../../middleware/optional-auth.middleware.js";
 import { env } from "../../config/env.js";
@@ -25,18 +25,29 @@ import {
   isR2Required,
 } from "../../utils/object-storage.js";
 import {
+  handleFlutterwaveEvent,
   handlePaystackEvent,
   handleStripeEvent,
+  verifyFlutterwaveSignature,
   verifyPaystackSignature,
   verifyStripeSignature,
 } from "../payments/payment-webhooks.js";
+import {
+  flutterwaveConfigured,
+  initializeFlutterwavePayment,
+} from "../payments/flutterwave.js";
+import {
+  initializePaystackPayment,
+  paystackConfigured,
+  verifyPaystackByReference,
+} from "../payments/paystack.js";
 
 const currencySchema = z.enum(["NGN", "USD"]);
 
 const createOrderSchema = z.object({
   email: z.string().email(),
   currency: currencySchema,
-  paymentProvider: z.enum(["paystack", "stripe"]),
+  paymentProvider: z.enum(["paystack", "stripe", "flutterwave"]),
   items: z
     .array(
       z.object({
@@ -48,6 +59,12 @@ const createOrderSchema = z.object({
     .max(20),
 });
 
+function paymentCallbackBaseUrl() {
+  const configured = env.PAYMENT_CALLBACK_BASE_URL.trim().replace(/\/$/, "");
+  if (configured) return configured;
+  const firstCors = env.CORS_ORIGIN.split(",")[0]?.trim().replace(/\/$/, "");
+  return firstCors || "http://localhost:3000";
+}
 function sendStoreError(
   request: import("fastify").FastifyRequest,
   reply: import("fastify").FastifyReply,
@@ -142,11 +159,15 @@ export async function storeRoutes(app: FastifyInstance) {
         const body = {
           ...order,
           checkout: {
-            message:
-              env.NODE_ENV === "production"
-                ? "Complete payment with your selected provider using paymentRef."
-                : "In development, POST /store/orders/:id/confirm-test to simulate payment.",
+            message: paystackConfigured()
+              ? "Complete payment via Paystack using POST /store/orders/:id/paystack/initialize."
+              : flutterwaveConfigured()
+                ? "Complete payment via Flutterwave using POST /store/orders/:id/flutterwave/initialize."
+                : env.NODE_ENV === "production"
+                  ? "Payment provider is not configured."
+                  : "In development, POST /store/orders/:id/confirm-test to simulate payment, or configure Paystack.",
             paymentRef: order.paymentRef,
+            provider: order.paymentProvider,
           },
         };
         if (idemKey) {
@@ -186,6 +207,154 @@ export async function storeRoutes(app: FastifyInstance) {
         provider: current.paymentProvider ?? "test",
       });
       return order;
+    } catch (error) {
+      return sendStoreError(request, reply, error);
+    }
+  });
+
+  app.post("/store/orders/:orderId/paystack/initialize", async (request, reply) => {
+    const { orderId } = request.params as { orderId: string };
+    try {
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order) throw new StoreError("Order not found", 404);
+      if (order.status !== OrderStatus.PENDING) {
+        throw new StoreError(`Order cannot be paid from status ${order.status}`, 409);
+      }
+      if (!order.paymentRef) {
+        throw new StoreError("Order missing paymentRef", 400);
+      }
+      if (order.paymentProvider && order.paymentProvider !== "paystack") {
+        throw new StoreError("Order is not a Paystack checkout", 400);
+      }
+
+      if (!paystackConfigured()) {
+        if (env.NODE_ENV === "production") {
+          throw new StoreError("Paystack is not configured", 503);
+        }
+        return {
+          mode: "dev_placeholder" as const,
+          paymentUrl: null,
+          reference: order.paymentRef,
+          useConfirmTest: true,
+        };
+      }
+
+      const callbackUrl = `${paymentCallbackBaseUrl()}/store/orders/${order.id}`;
+      const init = await initializePaystackPayment({
+        email: order.email,
+        amountMinor: order.totalAmount,
+        currency: order.currency as "NGN" | "USD",
+        reference: order.paymentRef,
+        callbackUrl,
+        orderId: order.id,
+      });
+
+      if (!order.paymentProvider) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentProvider: "paystack" },
+        });
+      }
+
+      return init;
+    } catch (error) {
+      return sendStoreError(request, reply, error);
+    }
+  });
+
+  /**
+   * Return-path confirm: after Paystack redirects the buyer back, the order page
+   * calls this to verify the charge and mark PAID without waiting for a webhook
+   * (needed for local E2E; also useful if webhooks are delayed).
+   */
+  app.post("/store/orders/:orderId/paystack/confirm", async (request, reply) => {
+    const { orderId } = request.params as { orderId: string };
+    try {
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order) throw new StoreError("Order not found", 404);
+      if (!order.paymentRef) {
+        throw new StoreError("Order missing paymentRef", 400);
+      }
+      if (order.paymentProvider && order.paymentProvider !== "paystack") {
+        throw new StoreError("Order is not a Paystack checkout", 400);
+      }
+
+      if (
+        order.status === OrderStatus.PAID ||
+        order.status === OrderStatus.FULFILLED
+      ) {
+        return getOrderById(orderId);
+      }
+      if (order.status !== OrderStatus.PENDING) {
+        throw new StoreError(
+          `Order cannot be confirmed from status ${order.status}`,
+          409,
+        );
+      }
+
+      if (!paystackConfigured()) {
+        throw new StoreError("Paystack is not configured", 503);
+      }
+
+      const ok = await verifyPaystackByReference(order.paymentRef);
+      if (!ok) {
+        throw new StoreError("Payment not yet confirmed by Paystack", 402);
+      }
+
+      return confirmOrderPaid({
+        paymentRef: order.paymentRef,
+        provider: "paystack",
+      });
+    } catch (error) {
+      return sendStoreError(request, reply, error);
+    }
+  });
+
+  app.post("/store/orders/:orderId/flutterwave/initialize", async (request, reply) => {
+    const { orderId } = request.params as { orderId: string };
+    try {
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order) throw new StoreError("Order not found", 404);
+      if (order.status !== OrderStatus.PENDING) {
+        throw new StoreError(`Order cannot be paid from status ${order.status}`, 409);
+      }
+      if (!order.paymentRef) {
+        throw new StoreError("Order missing paymentRef", 400);
+      }
+      if (order.paymentProvider && order.paymentProvider !== "flutterwave") {
+        throw new StoreError("Order is not a Flutterwave checkout", 400);
+      }
+
+      if (!flutterwaveConfigured()) {
+        if (env.NODE_ENV === "production") {
+          throw new StoreError("Flutterwave is not configured", 503);
+        }
+        return {
+          mode: "dev_placeholder" as const,
+          paymentUrl: null,
+          reference: order.paymentRef,
+          useConfirmTest: true,
+        };
+      }
+
+      const callbackUrl = `${paymentCallbackBaseUrl()}/store/orders/${order.id}`;
+      const init = await initializeFlutterwavePayment({
+        email: order.email,
+        amountMinor: order.totalAmount,
+        currency: order.currency as "NGN" | "USD",
+        reference: order.paymentRef,
+        callbackUrl,
+        orderId: order.id,
+      });
+
+      if (!order.paymentProvider) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentProvider: "flutterwave" },
+        });
+      }
+
+      return init;
     } catch (error) {
       return sendStoreError(request, reply, error);
     }
@@ -298,6 +467,40 @@ export async function storeRoutes(app: FastifyInstance) {
         `attachment; filename="zeemkolo-${verified.productId}.txt"`,
       )
       .send(body);
+  });
+
+  app.post("/payments/webhooks/flutterwave", async (request, reply) => {
+    const verifHash = request.headers["verif-hash"];
+    if (
+      !verifyFlutterwaveSignature(
+        Array.isArray(verifHash) ? verifHash[0] : verifHash,
+      )
+    ) {
+      return sendApiError(
+        request,
+        reply,
+        401,
+        "Unauthorized",
+        "Invalid Flutterwave signature",
+        "webhook_signature_invalid",
+      );
+    }
+
+    try {
+      const result = await handleFlutterwaveEvent(
+        (request.body ?? {}) as {
+          event?: string;
+          data?: {
+            tx_ref?: string;
+            status?: string;
+            id?: number | string;
+          };
+        },
+      );
+      return { ok: true, ...result };
+    } catch (error) {
+      return sendStoreError(request, reply, error);
+    }
   });
 
   app.post("/payments/webhooks/paystack", async (request, reply) => {

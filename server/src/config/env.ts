@@ -36,7 +36,18 @@ const envSchema = z.object({
   R2_BUCKET_NAME: z.string().optional().default("zeemkolo-technical-solutions"),
   R2_ENDPOINT: z.string().optional().default(""),
   R2_PUBLIC_URL: z.string().optional().default(""),
+  /** Flutterwave secret key (FLWSECK_…); required for live initialize in production. */
+  FLUTTERWAVE_SECRET_KEY: z.string().optional().default(""),
+  /** Secret hash from Flutterwave dashboard — compared to `verif-hash` webhook header. */
+  FLUTTERWAVE_SECRET_HASH: z.string().optional().default(""),
+  /**
+   * Public site origin used for Paystack callback_url
+   * (e.g. https://www.zeemkolo.com). Falls back to first CORS origin.
+   */
+  PAYMENT_CALLBACK_BASE_URL: z.string().optional().default(""),
+  /** Paystack secret key (`sk_test_…` / `sk_live_…`) — initialize, verify, webhook HMAC. */
   PAYSTACK_SECRET_KEY: z.string().optional().default(""),
+  /** Legacy scaffolding — unused for live checkout. */
   STRIPE_WEBHOOK_SECRET: z.string().optional().default(""),
   DOWNLOAD_TOKEN_SECRET: z.string().optional().default("dev-download-token-secret"),
   /** Optional Sentry DSN — errors are no-ops when empty (O5.1). */

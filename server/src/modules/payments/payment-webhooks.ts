@@ -1,12 +1,26 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "../../config/env.js";
 import { confirmOrderPaid, StoreError } from "../store/store.service.js";
+import { verifyFlutterwaveByReference } from "./flutterwave.js";
+import { verifyPaystackByReference } from "./paystack.js";
 
 function safeEqual(a: string, b: string) {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);
   if (bufA.length !== bufB.length) return false;
   return timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * Flutterwave sends `verif-hash` equal to the dashboard secret hash
+ * (not an HMAC of the body).
+ */
+export function verifyFlutterwaveSignature(verifHash: string | undefined) {
+  if (!env.FLUTTERWAVE_SECRET_HASH) {
+    return env.NODE_ENV !== "production";
+  }
+  if (!verifHash) return false;
+  return safeEqual(verifHash, env.FLUTTERWAVE_SECRET_HASH);
 }
 
 /** Paystack sends x-paystack-signature = HMAC SHA512 of raw body. */
@@ -54,6 +68,40 @@ export function verifyStripeSignature(
   return safeEqual(expected, v1);
 }
 
+export async function handleFlutterwaveEvent(payload: {
+  event?: string;
+  data?: {
+    tx_ref?: string;
+    status?: string;
+    id?: number | string;
+  };
+}) {
+  if (payload.event !== "charge.completed") {
+    return { ignored: true as const };
+  }
+  const reference = payload.data?.tx_ref;
+  if (!reference) {
+    throw new StoreError("Missing Flutterwave tx_ref", 400);
+  }
+  if (payload.data?.status && payload.data.status !== "successful") {
+    return { ignored: true as const };
+  }
+
+  // Prefer live verify when secret key is present; skip in test/dev without key.
+  if (env.FLUTTERWAVE_SECRET_KEY) {
+    const ok = await verifyFlutterwaveByReference(reference);
+    if (!ok) {
+      throw new StoreError("Flutterwave transaction not verified", 400);
+    }
+  }
+
+  const order = await confirmOrderPaid({
+    paymentRef: reference,
+    provider: "flutterwave",
+  });
+  return { ignored: false as const, order };
+}
+
 export async function handlePaystackEvent(payload: {
   event?: string;
   data?: { reference?: string; status?: string };
@@ -67,6 +115,14 @@ export async function handlePaystackEvent(payload: {
   }
   if (payload.data?.status && payload.data.status !== "success") {
     return { ignored: true as const };
+  }
+
+  // Prefer live verify when secret key is present; skip in vitest / without key.
+  if (env.PAYSTACK_SECRET_KEY && env.NODE_ENV !== "test") {
+    const ok = await verifyPaystackByReference(reference);
+    if (!ok) {
+      throw new StoreError("Paystack transaction not verified", 400);
+    }
   }
 
   const order = await confirmOrderPaid({
